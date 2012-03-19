@@ -651,6 +651,19 @@ config TOUCHSCREEN_TSC2004
 	  To compile this driver as a module, choose M here: the
 	  module will be called tsc2004.
 
+config TOUCHSCREEN_TSC2008
+	tristate "TSC2008 based touchscreens"
+	depends on SPI_MASTER
+	help
+	  Say Y here if you have a touchscreen interface using the
+	  TSC2008 controller, and your board-specific setup code
+	  includes that in its table of SPI devices.
+
+	  If unsure, say N.
+
+	  To compile this driver as a module, choose M here: the
+	  module will be called tsc2008.
+
 config TOUCHSCREEN_W90X900
 	tristate "W90P910 touchscreen driver"
 	depends on HAVE_CLK
