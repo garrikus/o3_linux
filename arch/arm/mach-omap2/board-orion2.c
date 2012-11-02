@@ -11,6 +11,7 @@
  * it under the terms of the GNU General Public License version 2 as
  * published by the Free Software Foundation.
  */
+
 #include <linux/kernel.h>
 #include <linux/init.h>
 #include <linux/platform_device.h>
@@ -25,6 +26,7 @@
 #include <linux/mtd/nand.h>
 
 #include <linux/i2c/twl.h>
+#include <linux/usb/otg.h>
 
 #include <linux/regulator/machine.h>
 #include <linux/mmc/host.h>
@@ -35,6 +37,7 @@
 #include <asm/mach/map.h>
 
 #include <plat/board.h>
+#include <plat/usb.h>
 #include <plat/common.h>
 #include <plat/mcspi.h>
 #include <plat/display.h>
@@ -54,10 +57,6 @@ static struct regulator_consumer_supply omap3evm_vaux1_supply = {
 	.supply			= "vrpu",
 };
 
-static struct regulator_consumer_supply omap3_evm_vio_supply[] = {
-	REGULATOR_SUPPLY("vcc", "spi1.0"),
-	REGULATOR_SUPPLY("vio_1v8", NULL),
-};
 
 /* VMMC1 for MMC1 pins CMD, CLK, DAT0..DAT3 (20 mA, plus card == max 220 mA) */
 static struct regulator_init_data omap3evm_vmmc1 = {
@@ -97,19 +96,6 @@ static struct regulator_init_data omap3evm_vaux1 = {
 	.consumer_supplies	= &omap3evm_vaux1_supply,
 };
 
-static struct regulator_init_data omap3_evm_vio = {
-	.constraints = {
-		.min_uV                 = 1800000,
-		.max_uV                 = 1800000,
-		.apply_uV               = true,
-		.valid_modes_mask       = REGULATOR_MODE_NORMAL
-			| REGULATOR_MODE_STANDBY,
-		.valid_ops_mask         = REGULATOR_CHANGE_MODE
-			| REGULATOR_CHANGE_STATUS,
-	},
-	.num_consumer_supplies  = ARRAY_SIZE(omap3_evm_vio_supply),
-	.consumer_supplies      = omap3_evm_vio_supply,
-};
 
 static int omap3evm_twl_gpio_setup(struct device *dev,
 		unsigned gpio, unsigned ngpio)
@@ -130,6 +116,29 @@ static struct twl4030_gpio_platform_data omap3evm_gpio_data = {
 	.setup		= omap3evm_twl_gpio_setup,
 };
 
+static struct twl4030_usb_data omap3evm_usb_data = {
+	.usb_mode	= T2_USB_MODE_ULPI,
+};
+
+static struct regulator_consumer_supply omap3_evm_vio_supply[] = {
+	REGULATOR_SUPPLY("vcc", "spi1.0"),
+	REGULATOR_SUPPLY("vio_1v8", NULL),
+};
+
+static struct regulator_init_data omap3_evm_vio = {
+	.constraints = {
+		.min_uV                 = 1800000,
+		.max_uV                 = 1800000,
+		.apply_uV               = true,
+		.valid_modes_mask       = REGULATOR_MODE_NORMAL
+			| REGULATOR_MODE_STANDBY,
+		.valid_ops_mask         = REGULATOR_CHANGE_MODE
+			| REGULATOR_CHANGE_STATUS,
+	},
+	.num_consumer_supplies  = ARRAY_SIZE(omap3_evm_vio_supply),
+	.consumer_supplies      = omap3_evm_vio_supply,
+};
+
 static struct twl4030_clock_init_data omap3orion_clock_data = {
 	.ck32k_lowpwr_enable	= false,
 	/* .slicer_bypass  	= false,*/
@@ -142,7 +151,7 @@ static struct twl4030_platform_data omap3evm_twldata = {
 	/* platform_data for children goes here */
 	.clock          = &omap3orion_clock_data,
 	/*.madc		= &omap3evm_madc_data,*/
-	/*.usb		= &omap3evm_usb_data,*/
+	.usb		= &omap3evm_usb_data,
 	.gpio		= &omap3evm_gpio_data,
 	/*.codec		= &omap3evm_codec_data,*/
 	/*.vdac		= &omap3_evm_vdac,*/
@@ -176,7 +185,6 @@ static struct i2c_board_info __initdata omap3orion_i2c_boardinfo2[] = {
 		/* Keypad */
 		I2C_BOARD_INFO("tca8418", 0x68),
 	},
-
 };
 
 static struct i2c_board_info __initdata omap3orion_i2c_boardinfo3[] = {
@@ -226,6 +234,20 @@ static void __init omap3_evm_init_irq(void)
 	gpmc_init();
 }
 
+static struct ehci_hcd_omap_platform_data ehci_pdata __initdata = {
+
+	.port_mode[0] = EHCI_HCD_OMAP_MODE_UNKNOWN,
+	.port_mode[1] = EHCI_HCD_OMAP_MODE_PHY,
+	.port_mode[2] = EHCI_HCD_OMAP_MODE_UNKNOWN,
+
+	.phy_reset  = true,
+	/* PHY reset GPIO will be runtime programmed based on EVM version */
+	.reset_gpio_port[0]  = -EINVAL,
+	.reset_gpio_port[1]  = -EINVAL,
+	.reset_gpio_port[2]  = -EINVAL
+};
+
+
 /*
  * NAND
  */
@@ -259,6 +281,12 @@ static struct mtd_partition omap3_evm_nand_partitions[] = {
 		.size		= MTDPART_SIZ_FULL,
 		.offset		= MTDPART_OFS_APPEND,	/* Offset = 0x780000 */
 	},
+};
+
+static struct omap_musb_board_data musb_board_data = {
+	.interface_type		= MUSB_INTERFACE_ULPI,
+	.mode			= MUSB_OTG,
+	.power			= 100,
 };
 
 static void __init omap3_evm_init(void)
@@ -319,8 +347,11 @@ static void __init omap3_evm_init(void)
 		omap_mux_init_gpio(135, OMAP_PIN_OUTPUT);
 		ehci_pdata.reset_gpio_port[1] = 135;
 	}
-	usb_musb_init(&musb_board_data);
+#endif
+	
+    usb_musb_init(&musb_board_data);
 	usb_ehci_init(&ehci_pdata);
+#if 0
 	tsc2008_dev_init();
 	omap3evm_init_smsc911x();
 #endif
