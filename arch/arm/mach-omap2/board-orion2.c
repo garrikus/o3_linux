@@ -73,6 +73,16 @@ static struct regulator_init_data omap3evm_vmmc1 = {
 	.consumer_supplies	= &omap3evm_vmmc1_supply,
 };
 
+static struct omap2_hsmmc_info mmc[] = {
+	{
+		.mmc		= 1,
+		.caps		= MMC_CAP_4_BIT_DATA,
+		.gpio_cd	= -EINVAL,
+		.gpio_wp	= -EINVAL,
+	},
+	{}	/* Terminator */
+};
+
 /* VAUX1 for NAV-sensor */
 static struct regulator_init_data omap3evm_vaux1 = {
 	.constraints = {
@@ -101,6 +111,25 @@ static struct regulator_init_data omap3_evm_vio = {
 	.consumer_supplies      = omap3_evm_vio_supply,
 };
 
+static int omap3evm_twl_gpio_setup(struct device *dev,
+		unsigned gpio, unsigned ngpio)
+{
+	omap2_hsmmc_init(mmc);
+
+	/* link regulator to MMC adapters */
+	omap3evm_vmmc1_supply.dev = mmc[0].dev;
+
+	return 0;
+}
+
+static struct twl4030_gpio_platform_data omap3evm_gpio_data = {
+	.gpio_base	= OMAP_MAX_GPIO_LINES,
+	.irq_base	= TWL4030_GPIO_IRQ_BASE,
+	.irq_end	= TWL4030_GPIO_IRQ_END,
+	.use_leds	= false,
+	.setup		= omap3evm_twl_gpio_setup,
+};
+
 static struct twl4030_clock_init_data omap3orion_clock_data = {
 	.ck32k_lowpwr_enable	= false,
 	/* .slicer_bypass  	= false,*/
@@ -114,7 +143,7 @@ static struct twl4030_platform_data omap3evm_twldata = {
 	.clock          = &omap3orion_clock_data,
 	/*.madc		= &omap3evm_madc_data,*/
 	/*.usb		= &omap3evm_usb_data,*/
-	/*.gpio		= &omap3evm_gpio_data,*/
+	.gpio		= &omap3evm_gpio_data,
 	/*.codec		= &omap3evm_codec_data,*/
 	/*.vdac		= &omap3_evm_vdac,*/
 	/*.vpll2		= &omap3_evm_vpll2,*/
@@ -141,11 +170,11 @@ static struct i2c_board_info __initdata omap3orion_i2c_boardinfo2[] = {
 	},
 	{
 		/* Accelerometer */
-		I2C_BOARD_INFO("mma8450q", 0x1d)
+		I2C_BOARD_INFO("mma8450q", 0x1d),
 	},
 	{
 		/* Keypad */
-		I2C_BOARD_INFO("tca8418", 0x68)
+		I2C_BOARD_INFO("tca8418", 0x68),
 	},
 
 };
@@ -153,11 +182,11 @@ static struct i2c_board_info __initdata omap3orion_i2c_boardinfo2[] = {
 static struct i2c_board_info __initdata omap3orion_i2c_boardinfo3[] = {
 	{
 		/* Charger */
-		I2C_BOARD_INFO("ltc4155", 0x12)
+		I2C_BOARD_INFO("ltc4155", 0x12),
 	},
 	{
 		/* Fuel gauge */
-		I2C_BOARD_INFO("bq27510", 0xaa)
+		I2C_BOARD_INFO("bq27510", 0xaa),
 	},
 };
 
@@ -247,7 +276,8 @@ static void __init omap3_evm_init(void)
 	 * Normally boolader should have done this. So this is normaly ineffective,
 	 * since CONFIG_OMAP_MUX disable during kernel config
 	 */
-	omap3_mux_init(omap35x_board_mux, OMAP_PACKAGE_CUS);
+
+	/*omap3_mux_init(omap35x_board_mux, OMAP_PACKAGE_CUS);*/
 
 	omap3_evm_i2c_init();
 
