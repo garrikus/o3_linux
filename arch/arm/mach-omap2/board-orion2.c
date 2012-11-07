@@ -25,6 +25,7 @@
 #include <linux/interrupt.h>
 #include <linux/mtd/nand.h>
 
+#include <linux/input/tca8418_keypad.h>
 #include <linux/i2c/twl.h>
 #include <linux/usb/otg.h>
 
@@ -48,6 +49,8 @@
 #include "sdram-micron-mt46h64m32lfcm-5.h"
 #include "hsmmc.h"
 #include "board-flash.h"
+
+#define ORION2_KEYPAD_IRQGPIO  15
 
 static struct regulator_consumer_supply omap3evm_vmmc1_supply = {
 	.supply			= "vmmc",
@@ -120,6 +123,41 @@ static struct twl4030_usb_data omap3evm_usb_data = {
 	.usb_mode	= T2_USB_MODE_ULPI,
 };
 
+static uint32_t board_keymap[] = {
+	KEY(0, 0, KEY_LEFT),
+	KEY(0, 1, KEY_DOWN),
+	KEY(0, 2, KEY_ENTER),
+	KEY(0, 3, KEY_M),
+
+	KEY(1, 0, KEY_RIGHT),
+	KEY(1, 1, KEY_UP),
+	KEY(1, 2, KEY_I),
+	KEY(1, 3, KEY_N),
+
+	KEY(2, 0, KEY_A),
+	KEY(2, 1, KEY_E),
+	KEY(2, 2, KEY_J),
+	KEY(2, 3, KEY_O),
+
+	KEY(3, 0, KEY_B),
+	KEY(3, 1, KEY_F),
+	KEY(3, 2, KEY_K),
+	KEY(3, 3, KEY_P)
+};
+
+struct matrix_keymap_data tca8418_keymap = {
+	.keymap = board_keymap,
+	.keymap_size = ARRAY_SIZE(board_keymap),
+};
+
+struct tca8418_keypad_platform_data tca8418_pdata = {
+    .keymap_data = &tca8418_keymap,
+    .rows = 8,
+    .cols = 10,
+    .rep = 1,
+    .irq_is_gpio = 1,
+};
+
 static struct regulator_consumer_supply omap3_evm_vio_supply[] = {
 	REGULATOR_SUPPLY("vcc", "spi1.0"),
 	REGULATOR_SUPPLY("vio_1v8", NULL),
@@ -181,10 +219,12 @@ static struct i2c_board_info __initdata omap3orion_i2c_boardinfo2[] = {
 		/* Accelerometer */
 		I2C_BOARD_INFO("mma8450q", 0x1d),
 	},
-	{
-		/* Keypad */
-		I2C_BOARD_INFO("tca8418", 0x68),
-	},
+    {
+        /* Keypad */
+        I2C_BOARD_INFO("tca8418_keypad", 0x34),
+        .irq = ORION2_KEYPAD_IRQGPIO,
+        .platform_data = &tca8418_pdata,
+    },
 };
 
 static struct i2c_board_info __initdata omap3orion_i2c_boardinfo3[] = {
