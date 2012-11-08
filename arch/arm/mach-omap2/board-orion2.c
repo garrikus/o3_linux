@@ -274,20 +274,6 @@ static void __init omap3_evm_init_irq(void)
 	gpmc_init();
 }
 
-static struct ehci_hcd_omap_platform_data ehci_pdata __initdata = {
-
-	.port_mode[0] = EHCI_HCD_OMAP_MODE_UNKNOWN,
-	.port_mode[1] = EHCI_HCD_OMAP_MODE_PHY,
-	.port_mode[2] = EHCI_HCD_OMAP_MODE_UNKNOWN,
-
-	.phy_reset  = true,
-	/* PHY reset GPIO will be runtime programmed based on EVM version */
-	.reset_gpio_port[0]  = -EINVAL,
-	.reset_gpio_port[1]  = -EINVAL,
-	.reset_gpio_port[2]  = -EINVAL
-};
-
-
 /*
  * NAND
  */
@@ -390,7 +376,6 @@ static void __init omap3_evm_init(void)
 #endif
 	
     usb_musb_init(&musb_board_data);
-	usb_ehci_init(&ehci_pdata);
 #if 0
 	tsc2008_dev_init();
 	omap3evm_init_smsc911x();
