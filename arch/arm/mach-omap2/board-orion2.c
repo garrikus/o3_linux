@@ -55,6 +55,97 @@
 #define ORION_TS_GPIO          14
 #define ORION2_KEYPAD_IRQGPIO  15
 
+#define ORION2_DSIDBI_GPIO     181
+#define ORION2_DSI_CMDVID_GPIO 178
+
+static int lcd_enabled;
+
+static void __init omap3_evm_display_init(void)
+{
+	int r;
+
+	r = gpio_request(ORION2_DSIDBI_GPIO, "lcd_dsidbi");
+	if (r) {
+		printk(KERN_ERR "failed to get lcd_dsidbi\n");
+		return;
+	}
+	gpio_direction_output(ORION2_DSIDBI_GPIO, 1);
+
+	r = gpio_request(ORION2_DSI_CMDVID_GPIO, "lcd_dsi_cmdvid");
+	if (r) {
+		printk(KERN_ERR "failed to get lcd_dsi_cmdvid\n");
+		goto err_1;
+	}
+	gpio_direction_output(ORION2_DSI_CMDVID_GPIO, 0);
+
+	return;
+
+err_1:
+	gpio_free(ORION2_DSIDBI_GPIO);
+
+}
+static int omap3_evm_enable_lcd(struct omap_dss_device *dssdev)
+{
+
+	lcd_enabled = 1;
+	return 0;
+}
+
+static void omap3_evm_disable_lcd(struct omap_dss_device *dssdev)
+{
+
+	lcd_enabled = 0;
+}
+
+static struct omap_dss_device omap3_evm_lcd_device = {
+	.name			= "lcd",
+	.driver_name		= "taal",
+	.type			= OMAP_DISPLAY_TYPE_DSI,
+	.phy.dpi.data_lines	= 18, /* XXX:CHECK */
+/*	.max_backlight_level	= 100,*/
+	.platform_enable	= omap3_evm_enable_lcd,
+	.platform_disable	= omap3_evm_disable_lcd,
+/*	.set_backlight		= omap3evm_set_bl_intensity,*/
+};
+
+static struct omap_dss_device *omap3_evm_dss_devices[] = {
+	&omap3_evm_lcd_device,
+};
+
+static struct omap_dss_board_info omap3_evm_dss_data = {
+	.num_devices	= ARRAY_SIZE(omap3_evm_dss_devices),
+	.devices	= omap3_evm_dss_devices,
+	.default_device	= &omap3_evm_lcd_device,
+};
+
+static struct platform_device omap3_evm_dss_device = {
+	.name		= "omapdss",
+	.id		= -1,
+	.dev		= {
+		.platform_data = &omap3_evm_dss_data,
+	},
+};
+
+static struct regulator_consumer_supply omap3evm_vaux3_supply = {
+	.supply         = "lcd_2v8",
+	.dev	    	= &omap3_evm_dss_device.dev,
+};
+
+/* VAUX3 for LCD */
+static struct regulator_init_data omap3evm_vaux3 = {
+	.constraints = {
+		.min_uV                 = 2800000,
+		.max_uV                 = 2800000,
+		.apply_uV               = true,
+		.valid_modes_mask       = REGULATOR_MODE_NORMAL
+					| REGULATOR_MODE_STANDBY,
+		.valid_ops_mask         = REGULATOR_CHANGE_MODE
+					| REGULATOR_CHANGE_STATUS,
+	},
+	.num_consumer_supplies  = 1,
+	.consumer_supplies      = &omap3evm_vaux3_supply,
+};
+
 static struct regulator_consumer_supply omap3evm_vmmc1_supply = {
 	.supply			= "vmmc",
 };
@@ -331,6 +422,9 @@ static void __init omap3_evm_init_irq(void)
 	gpmc_init();
 }
 
+static struct platform_device *omap3_evm_devices[] __initdata = {
+	&omap3_evm_dss_device,
+};
 /*
  * NAND
  */
@@ -392,9 +486,7 @@ static void __init omap3_evm_init(void)
 
 	omap3_evm_i2c_init();
 
-#if 0
 	platform_add_devices(omap3_evm_devices, ARRAY_SIZE(omap3_evm_devices));
-#endif
 
 	spi_register_board_info(omap3evm_spi_board_info,
 				ARRAY_SIZE(omap3evm_spi_board_info));
@@ -437,6 +529,7 @@ static void __init omap3_evm_init(void)
 #if 0
 	omap3evm_init_smsc911x();
 #endif
+	omap3_evm_display_init();
 
 	/* NAND */
 	board_nand_init(omap3_evm_nand_partitions,
