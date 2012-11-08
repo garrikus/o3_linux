@@ -43,11 +43,11 @@
 
 #include "pwm.h"
 
-static int nomux;
+static int nomux = 1;
 module_param(nomux, int, S_IRUGO);
 MODULE_PARM_DESC(nomux, "Do not mux the PWM pins");
 
-static int frequency;
+static int frequency = 10000;
 module_param(frequency, int, S_IRUGO);
 MODULE_PARM_DESC(frequency, "PWM frequency");
 
