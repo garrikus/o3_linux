@@ -26,6 +26,8 @@
 #include <linux/mtd/nand.h>
 
 #include <linux/input/tca8418_keypad.h>
+#include <linux/spi/spi.h>
+#include <linux/spi/tsc2008.h>
 #include <linux/i2c/twl.h>
 #include <linux/usb/otg.h>
 
@@ -50,6 +52,7 @@
 #include "hsmmc.h"
 #include "board-flash.h"
 
+#define ORION_TS_GPIO          14
 #define ORION2_KEYPAD_IRQGPIO  15
 
 static struct regulator_consumer_supply omap3evm_vmmc1_supply = {
@@ -259,6 +262,60 @@ static int __init omap3_evm_i2c_init(void)
 	return 0;
 }
 
+static void tsc2008_dev_init(void)
+{
+	if (gpio_request(ORION_TS_GPIO, "TSC2008 pendown") < 0)
+		printk(KERN_ERR "can't get tsc2008 pen down GPIO\n");
+
+	gpio_direction_input(ORION_TS_GPIO);
+	gpio_set_debounce(ORION_TS_GPIO, 310);
+}
+
+static int tsc2008_get_pendown_state(void)
+{
+	return !gpio_get_value(ORION_TS_GPIO);
+}
+
+static struct tsc2008_platform_data tsc2008_config = {
+	.x_plate_ohms        = 450,
+	.bit_mode            = 12,
+	.get_pendown_state   = tsc2008_get_pendown_state,
+	.clear_penirq        = NULL,
+	.init_platform_hw    = NULL,
+	.exit_platform_hw    = NULL,
+	.irq_flags           = IRQF_TRIGGER_FALLING,
+};
+
+static struct omap2_mcspi_device_config tsc2008_mcspi_config = {
+	.turbo_mode	= 0,
+	.single_channel	= 1,	/* 0: slave, 1: master */
+};
+
+static struct spi_board_info omap3evm_spi_board_info[] = {
+#if 0
+	[0] = {
+		.modalias		= "nt39122b",
+		.bus_num		= 1,
+		.chip_select		= 0,
+		.max_speed_hz		= 1500000,
+		.mode                   = SPI_3WIRE,
+		.controller_data	= &nt39122b_mcspi_config,
+	},
+#endif
+
+    /* XXX: Take care of index!!! */
+	/* No touchscreen so far... */
+	[0] = {
+		.modalias		= "tsc2008",
+		.bus_num		= 1,
+		.chip_select		= 0,
+		.max_speed_hz		= 25000000,
+		.controller_data	= &tsc2008_mcspi_config,
+		.irq			= OMAP_GPIO_IRQ(ORION_TS_GPIO),
+		.platform_data		= &tsc2008_config,
+	},
+};
+
 static struct omap_board_config_kernel omap3_evm_config[] __initdata = {
 };
 
@@ -337,10 +394,10 @@ static void __init omap3_evm_init(void)
 
 #if 0
 	platform_add_devices(omap3_evm_devices, ARRAY_SIZE(omap3_evm_devices));
+#endif
 
 	spi_register_board_info(omap3evm_spi_board_info,
 				ARRAY_SIZE(omap3evm_spi_board_info));
-#endif
 
 	omap_serial_init();
 
@@ -376,8 +433,8 @@ static void __init omap3_evm_init(void)
 #endif
 	
     usb_musb_init(&musb_board_data);
-#if 0
 	tsc2008_dev_init();
+#if 0
 	omap3evm_init_smsc911x();
 #endif
 
