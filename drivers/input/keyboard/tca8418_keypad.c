@@ -417,7 +417,7 @@ static int __init tca8418_keypad_init(void)
 {
 	return i2c_add_driver(&tca8418_keypad_driver);
 }
-subsys_initcall(tca8418_keypad_init);
+module_init(tca8418_keypad_init);
 
 static void __exit tca8418_keypad_exit(void)
 {
