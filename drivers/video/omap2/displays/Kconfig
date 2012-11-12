@@ -26,6 +26,12 @@ config PANEL_TAAL
         help
           Taal DSI command mode panel from TPO.
 
+config PANEL_TRULY
+        tristate "TRULY TFT480800-16-E DSI Panel"
+        depends on OMAP2_DSS_DSI
+        help
+           Truly TFT480800-16-E DSI command mode HX8369-A base panel.
+
 config PANEL_TOPPOLY_TDO35S
         tristate "Toppoly TDO35S LCD Panel support"
         depends on OMAP2_DSS

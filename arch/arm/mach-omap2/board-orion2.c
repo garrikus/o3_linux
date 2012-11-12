@@ -44,6 +44,7 @@
 #include <plat/common.h>
 #include <plat/mcspi.h>
 #include <plat/display.h>
+#include <plat/nokia-dsi-panel.h>
 #include <plat/omap-pm.h>
 #include <plat/gpmc.h>
 
@@ -97,15 +98,49 @@ static void omap3_evm_disable_lcd(struct omap_dss_device *dssdev)
 	lcd_enabled = 0;
 }
 
+static struct nokia_dsi_panel_data panel_data = {
+    .name = "truly_panel",
+    .reset_gpio = -1,
+};
+
 static struct omap_dss_device omap3_evm_lcd_device = {
-	.name			= "lcd",
-	.driver_name		= "taal",
+	.name			= "truly_lcd",
+	.driver_name		= "truly",
 	.type			= OMAP_DISPLAY_TYPE_DSI,
-	.phy.dpi.data_lines	= 18, /* XXX:CHECK */
+	.phy.dsi = {
+			.clk_lane   = 2,
+			.clk_pol    = 0,
+			.data1_lane = 1,
+			.data1_pol  = 0,
+			.data2_lane = 3,
+			.data2_pol  = 0,
+
+            .div = {
+                    .regn  = 13,
+                    .regm  = 180,
+                    .regm3 = 5,
+                    .regm4 = 5,
+
+                    .lp_clk_div = 2,
+
+                    .lck_div = 1,
+                    .pck_div = 5,
+            },
+    },
+
+    .panel = {
+            .timings.x_res = 480,
+            .timings.y_res = 800,
+
+            /*.timings.pixel_clock  XXX: What is this? DSI's 30MHz or via PCD calculated? */
+    },
+
+    .ctrl.pixel_size    = 24,
 /*	.max_backlight_level	= 100,*/
 	.platform_enable	= omap3_evm_enable_lcd,
 	.platform_disable	= omap3_evm_disable_lcd,
 /*	.set_backlight		= omap3evm_set_bl_intensity,*/
+    .data               = &panel_data,
 };
 
 static struct omap_dss_device *omap3_evm_dss_devices[] = {
@@ -255,6 +290,7 @@ struct tca8418_keypad_platform_data tca8418_pdata = {
 static struct regulator_consumer_supply omap3_evm_vio_supply[] = {
 	REGULATOR_SUPPLY("vcc", "spi1.0"),
 	REGULATOR_SUPPLY("vio_1v8", NULL),
+	REGULATOR_SUPPLY("vdds_dsi", "omapdss"),
 };
 
 static struct regulator_init_data omap3_evm_vio = {
@@ -291,7 +327,7 @@ static struct twl4030_platform_data omap3evm_twldata = {
 	/*.vaux2          = &omap3evm_vaux2,*/
 	.vaux1          = &omap3evm_vaux1,
 	.vio		= &omap3_evm_vio,
-	/*.vaux3		= &omap3evm_vaux3,*/
+	.vaux3		= &omap3evm_vaux3,
 };
 
 static struct i2c_board_info __initdata omap3orion_i2c_boardinfo1[] = {
