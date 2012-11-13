@@ -806,6 +806,8 @@ static int dsi_calc_clock_rates(struct dsi_clock_info *cinfo)
 	if (cinfo->regm4 > REGM4_MAX)
 		return -EINVAL;
 
+    DSSERR("dsi rate: input is in bounds.\n");
+
 	if (cinfo->use_dss2_fck) {
 		cinfo->clkin = dss_clk_get_rate(DSS_CLK_FCK2);
 		/* XXX it is unclear if highfreq should be used
@@ -822,13 +824,19 @@ static int dsi_calc_clock_rates(struct dsi_clock_info *cinfo)
 
 	cinfo->fint = cinfo->clkin / (cinfo->regn * (cinfo->highfreq ? 2 : 1));
 
+    DSSERR("fint %ld.\n", cinfo->fint);
 	if (cinfo->fint > FINT_MAX || cinfo->fint < FINT_MIN)
 		return -EINVAL;
 
+    DSSERR("fint is fine.\n");
+
 	cinfo->clkin4ddr = 2 * cinfo->regm * cinfo->fint;
 
+    DSSERR("c4a %ld.\n", cinfo->clkin4ddr);
 	if (cinfo->clkin4ddr > 1800 * 1000 * 1000)
 		return -EINVAL;
+
+    DSSERR("clkin4ddr is good.\n");
 
 	if (cinfo->regm3 > 0)
 		cinfo->dsi1_pll_fclk = cinfo->clkin4ddr / cinfo->regm3;
@@ -2989,6 +2997,8 @@ static int dsi_configure_dsi_clocks(struct omap_dss_device *dssdev)
 	cinfo.regm3 = dssdev->phy.dsi.div.regm3;
 	cinfo.regm4 = dssdev->phy.dsi.div.regm4;
 	r = dsi_calc_clock_rates(&cinfo);
+    DSSERR("Calced: dsi1pll:%ld dsi2pll:%ld\n",
+            cinfo.dsi1_pll_fclk, cinfo.dsi2_pll_fclk);
 	if (r) {
 		DSSERR("Failed to calc dsi clocks\n");
 		return r;
@@ -3010,6 +3020,7 @@ static int dsi_configure_dispc_clocks(struct omap_dss_device *dssdev)
 	unsigned long long fck;
 
 	fck = dsi_get_dsi1_pll_rate();
+    DSSERR("RATE %ld\n", fck);
 
 	dispc_cinfo.lck_div = dssdev->phy.dsi.div.lck_div;
 	dispc_cinfo.pck_div = dssdev->phy.dsi.div.pck_div;

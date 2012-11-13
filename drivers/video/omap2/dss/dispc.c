@@ -2540,6 +2540,7 @@ found:
 int dispc_calc_clock_rates(unsigned long dispc_fclk_rate,
 		struct dispc_clock_info *cinfo)
 {
+    DSSERR("RATE-2 %ld\n", dispc_fclk_rate);
 	if (cinfo->lck_div > 255 || cinfo->lck_div == 0)
 		return -EINVAL;
 	if (cinfo->pck_div < 2 || cinfo->pck_div > 255)
