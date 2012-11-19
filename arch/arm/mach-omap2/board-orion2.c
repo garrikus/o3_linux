@@ -117,22 +117,23 @@ static struct omap_dss_device omap3_evm_lcd_device = {
 
             .div = {
                     .regn  = 13,
-                    .regm  = 180,
-                    .regm3 = 5,
-                    .regm4 = 5,
+                    .regm  = 138,
+                    .regm3 = 6,
+                    .regm4 = 6,
 
-                    .lp_clk_div = 2,
+                    .lp_clk_div = 4,
 
                     .lck_div = 1,
-                    .pck_div = 5,
+                    .pck_div = 4,
             },
     },
 
     .panel = {
             .timings.x_res = 480,
             .timings.y_res = 800,
+            .timings.pixel_clock = 23000,
 
-            /*.timings.pixel_clock  XXX: What is this? DSI's 30MHz or via PCD calculated? */
+            .config = OMAP_DSS_LCD_TFT,
     },
 
     .ctrl.pixel_size    = 24,
