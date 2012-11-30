@@ -1518,7 +1518,7 @@ static void dsi_complexio_timings(void)
 	tclk_prepare = ns2ddr(65);
 
 	/* min tclk-prepare + tclk-zero = 300ns */
-	tclk_zero = ns2ddr(260);
+	tclk_zero = ns2ddr(265);
 
 	DSSDBG("ths_prepare %u (%uns), ths_prepare_ths_zero %u (%uns)\n",
 		ths_prepare, ddr2ns(ths_prepare),
