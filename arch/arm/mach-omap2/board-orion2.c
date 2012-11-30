@@ -121,7 +121,7 @@ static struct omap_dss_device omap3_evm_lcd_device = {
                     .regm3 = 6,
                     .regm4 = 6,
 
-                    .lp_clk_div = 4,
+                    .lp_clk_div = 8,
 
                     .lck_div = 1,
                     .pck_div = 4,
