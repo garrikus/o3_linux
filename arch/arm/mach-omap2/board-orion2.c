@@ -237,7 +237,7 @@ static struct i2c_board_info __initdata omap3orion_i2c_boardinfo3[] = {
 	},
 	{
 		/* Fuel gauge */
-		I2C_BOARD_INFO("bq27510", 0xaa),
+		I2C_BOARD_INFO("bq27510", 0x55),
 	},
 };
 
