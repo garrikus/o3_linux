@@ -982,6 +982,7 @@ err:
 	return r;
 }
 
+static int pattern_shown = 0;
 /* apply var to the overlay */
 int omapfb_apply_changes(struct fb_info *fbi, int init)
 {
@@ -994,8 +995,11 @@ int omapfb_apply_changes(struct fb_info *fbi, int init)
 	int i;
 
 #ifdef DEBUG
-	if (omapfb_test_pattern)
+	if (omapfb_test_pattern && !pattern_shown)
+    {
 		fill_fb(fbi);
+        pattern_shown++;
+    }
 #endif
 
 	WARN_ON(!atomic_read(&ofbi->region->lock_count));
