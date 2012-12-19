@@ -1,11 +1,11 @@
 /*
  * linux/arch/arm/mach-omap2/board-orion2.c
  *
- * 
+ *
  *
  * Modified from mach-omap2/board-omap3evm.c
  *
- * 
+ *
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -554,7 +554,7 @@ static void __init omap3_evm_init(void)
 		ehci_pdata.reset_gpio_port[1] = 135;
 	}
 #endif
-	
+
     usb_musb_init(&musb_board_data);
 	tsc2008_dev_init();
 #if 0
