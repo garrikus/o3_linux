@@ -56,7 +56,7 @@ struct bq27x00_access_methods {
 		struct bq27x00_device_info *di);
 };
 
-enum bq27x00_chip { BQ27000, BQ27500 };
+enum bq27x00_chip { BQ27000, BQ27500, BQ27510, BQ27541 };
 
 struct bq27x00_device_info {
 	struct device 		*dev;
@@ -105,7 +105,8 @@ static int bq27x00_battery_temperature(struct bq27x00_device_info *di)
 		return ret;
 	}
 
-	if (di->chip == BQ27500)
+	/* Remember to do Kelvin to Celsius */
+	if (di->chip == BQ27500 || di->chip == BQ27510 || di->chip == BQ27541)
 		return temp - 2731;
 	else
 		return ((temp >> 2) - 273) * 10;
@@ -146,7 +147,7 @@ static int bq27x00_battery_current(struct bq27x00_device_info *di)
 		return 0;
 	}
 
-	if (di->chip == BQ27500) {
+	if (di->chip == BQ27500 || di->chip == BQ27510 || di->chip == BQ27541) {
 		/* bq27500 returns signed value */
 		curr = (int)(s16)curr;
 	} else {
@@ -173,7 +174,7 @@ static int bq27x00_battery_rsoc(struct bq27x00_device_info *di)
 	int ret;
 	int rsoc = 0;
 
-	if (di->chip == BQ27500)
+	if (di->chip == BQ27500 || di->chip == BQ27510 || di->chip == BQ27541)
 		ret = bq27x00_read(BQ27500_REG_SOC, &rsoc, 0, di);
 	else
 		ret = bq27x00_read(BQ27000_REG_RSOC, &rsoc, 1, di);
@@ -198,7 +199,7 @@ static int bq27x00_battery_status(struct bq27x00_device_info *di,
 		return ret;
 	}
 
-	if (di->chip == BQ27500) {
+	if (di->chip == BQ27500 || di->chip == BQ27510 || di->chip == BQ27541) {
 		if (flags & BQ27500_FLAG_FC)
 			status = POWER_SUPPLY_STATUS_FULL;
 		else if (flags & BQ27500_FLAG_DSC)
@@ -437,6 +438,8 @@ static int bq27x00_battery_remove(struct i2c_client *client)
 static const struct i2c_device_id bq27x00_id[] = {
 	{ "bq27200", BQ27000 },	/* bq27200 is same as bq27000, but with i2c */
 	{ "bq27500", BQ27500 },
+	{ "bq27510", BQ27510 },
+	{ "bq27541", BQ27541 },
 	{},
 };
 

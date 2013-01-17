@@ -359,7 +359,7 @@ static struct i2c_board_info __initdata omap3orion_i2c_boardinfo3[] = {
 	},
 	{
 		/* Fuel gauge */
-		I2C_BOARD_INFO("bq27510", 0xaa),
+		I2C_BOARD_INFO("bq27510", 0x55),
 	},
 };
 
@@ -497,8 +497,18 @@ static struct omap_musb_board_data musb_board_data = {
 	.power			= 100,
 };
 
+static void orion_power_off(void)
+{
+	twl_i2c_write_u8(TWL4030_MODULE_PM_MASTER, 0x01, TWL4030_PM_MASTER_P1_SW_EVENTS);
+
+	/* We should never make it this far */
+	printk(KERN_ALERT "Should be poweroff now.\n");
+}
+
+
 static void __init omap3_evm_init(void)
 {
+	pm_power_off = orion_power_off;
 
     /* TODO: Select one*/
 #if 0
