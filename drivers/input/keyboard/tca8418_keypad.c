@@ -369,6 +369,7 @@ static int __devinit tca8418_keypad_probe(struct i2c_client *client,
 			client->irq, error);
 		goto fail2;
 	}
+    enable_irq_wake(client->irq);
 
 	error = input_register_device(input);
 	if (error) {
