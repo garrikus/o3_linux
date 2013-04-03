@@ -861,6 +861,8 @@ static void taal_remove(struct omap_dss_device *dssdev)
 
 /* common setting */
 static const unsigned char extend_cmd_enable[4] = {0xB9, 0xFF, 0x83, 0x69};
+
+/* Put 120ms after */
 static const unsigned char exit_sleep[2] = {0x11, 0x00};
 static const unsigned char display_on[2] = {0x29, 0x00};
 static const unsigned char display_off[2] = {0x28, 0x00};
@@ -891,6 +893,8 @@ static const unsigned char cmd_display_setting[16] = {
 			0x00, 0x00, 0x00, 0x00,
 			0x03, 0x03, 0x00, 0x01
 };
+
+/* Put 10ms after */
 static const unsigned char cmd_gip_setting[27] = {
 			0xD5, 0x00, 0x04, 0x03,
 			0x00, 0x01, 0x05, 0x28,
@@ -914,6 +918,8 @@ static const unsigned char cmd_gamma_setting[35] = {
 			0x0E, 0x12, 0x15, 0x12,
 			0x14, 0x0F, 0x17
 };
+
+/* Put 10ms after */
 static const unsigned char cmd_dgc_lut_setting[128] = {
 			0xC1, 0x01,
 			//R
@@ -1108,45 +1114,41 @@ static void just_do_it()
 {
     int i;
 #if 1
-    DSSDBG("jdoi-1\n");
+    
+    /*mdelay(70);*/
+
+
 	dsi_vc_dcs_write(TCH, extend_cmd_enable,     			sizeof(extend_cmd_enable));
-    DSSDBG("jdoi-2\n");
-	dsi_vc_dcs_write(TCH, cmd_oscillator_setting,         	sizeof(cmd_oscillator_setting));
-    DSSDBG("jdoi-3\n");
-	dsi_vc_dcs_write(TCH, cmd_power_setting,   			sizeof(cmd_power_setting));
-    /* was here */
-    DSSDBG("jdoi-4\n");
-	dsi_vc_dcs_write(TCH, cmd_display_setting,             sizeof(cmd_display_setting));
+	/*dsi_vc_dcs_write(TCH, cmd_oscillator_setting,         	sizeof(cmd_oscillator_setting));*/
+	/*dsi_vc_dcs_write(TCH, cmd_power_setting,   			sizeof(cmd_power_setting));*/
+	/*dsi_vc_dcs_write(TCH, cmd_display_setting,             sizeof(cmd_display_setting));*/
 
-    dsi_wd_flag = 1;
-    DSSDBG("jdoi-5\n");
-	dsi_vc_dcs_write(TCH, cmd_wave_cycle_setting,          sizeof(cmd_wave_cycle_setting));
+	/*dsi_vc_dcs_write(TCH, cmd_wave_cycle_setting,          sizeof(cmd_wave_cycle_setting));*/
 
-    dsi_wd_flag = 1;
-    /* was here */
-    DSSDBG("jdoi-6\n");
-	dsi_vc_dcs_write(TCH, cmd_vcom_setting,                sizeof(cmd_vcom_setting));
-    DSSDBG("jdoi-7\n");
-	dsi_vc_dcs_write(TCH, cmd_gip_setting,           		sizeof(cmd_gip_setting));
-    DSSDBG("jdoi-8\n");
-	dsi_vc_dcs_write(TCH, cmd_gamma_setting,             	sizeof(cmd_gamma_setting));
-    /* was here */
-    DSSDBG("jdoi-9\n");
-	dsi_vc_dcs_write(TCH, cmd_dgc_lut_setting,             sizeof(cmd_dgc_lut_setting));
-    DSSDBG("jdoi-10\n");
-	dsi_vc_dcs_write(TCH, mipi_setting,                   	sizeof(mipi_setting));
-
-    DSSDBG("jdoi-11\n");
-	dsi_vc_dcs_write(TCH, cmd_pixel_format_setting,        sizeof(cmd_pixel_format_setting));
-    DSSDBG("jdoi-12\n");
-	dsi_vc_dcs_write(TCH, exit_sleep,     					sizeof(exit_sleep));
-#endif
-    DSSDBG("jdoi-13\n");
-	dsi_vc_dcs_write(TCH, display_on,         				sizeof(display_on));
-    DSSDBG("jdoi-13-1\n");
-	dsi_vc_dcs_write(TCH, cmd_column_addr,         				sizeof(cmd_column_addr));
-    DSSDBG("jdoi-13-2\n");
+/*	dsi_vc_dcs_write(TCH, cmd_vcom_setting,                sizeof(cmd_vcom_setting));*/
+/*
+    dsi_vc_dcs_write(TCH, cmd_column_addr,         				sizeof(cmd_column_addr));
 	dsi_vc_dcs_write(TCH, cmd_page_addr,         				sizeof(cmd_page_addr));
+ */
+
+	dsi_vc_dcs_write(TCH, cmd_gip_setting,           		sizeof(cmd_gip_setting));
+    /*mdelay(10);*/
+
+
+/*	dsi_vc_dcs_write(TCH, cmd_gamma_setting,             	sizeof(cmd_gamma_setting));*/
+
+/*	dsi_vc_dcs_write(TCH, cmd_dgc_lut_setting,             sizeof(cmd_dgc_lut_setting));*/
+    /*mdelay(10);*/
+
+	dsi_vc_dcs_write(TCH, mipi_setting,                   	sizeof(mipi_setting));
+/*	dsi_vc_dcs_write(TCH, cmd_pixel_format_setting,        sizeof(cmd_pixel_format_setting));*/
+
+/*	dsi_vc_dcs_write(TCH, exit_sleep,     					sizeof(exit_sleep));
+    mdelay(120);
+    */
+
+#endif
+/*	dsi_vc_dcs_write(TCH, display_on,         				sizeof(display_on));*/
 #if 0
     DSSDBG("jdoi-13-3\n");
 	dsi_vc_dcs_write(TCH, img_dump,         				sizeof(img_dump));
@@ -1180,14 +1182,14 @@ static int taal_power_on(struct omap_dss_device *dssdev)
 
 	omapdss_dsi_vc_enable_hs(TCH, false);
 
-#if 1
+#if 0
     DSSDBG("P-on sleepout preJDI\n");
 	r = taal_sleep_out(td);
 	if (r)
 		goto err;
+#endif
 
     just_do_it();
-#endif
 
 #if 1
     DSSDBG("P-on sleepout\n");
@@ -1214,6 +1216,8 @@ static int taal_power_on(struct omap_dss_device *dssdev)
 		goto err;
 #endif
 
+
+#if 0
     /* Turn off BackLight Control completely. */
 	r = taal_dcs_write_1(DCS_CTRL_DISPLAY, 0);
 #if 0
@@ -1236,6 +1240,7 @@ static int taal_power_on(struct omap_dss_device *dssdev)
 		if (r)
 			goto err;
 	}
+#endif
 #endif
 
 	r = taal_dcs_write_0(DCS_DISPLAY_ON);
