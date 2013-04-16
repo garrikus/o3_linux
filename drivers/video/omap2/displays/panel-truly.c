@@ -862,6 +862,13 @@ static unsigned char cmd_gip_setting[27] = {
 			0x0F, 0x04, 0x00
 };
 
+static unsigned char cmd_temp_control_setting[11] = {
+            0xD8, 0x00, 0x12, 0x76,
+            0xA7, 0x09, 0x67, 0x50,
+            0x4E, 0x57, 0x75
+};
+
+
 static int power_on_panel_init()
 {
     int r;
@@ -874,6 +881,10 @@ static int power_on_panel_init()
     if (r)
             goto err;
     mdelay(10);
+
+	r = dsi_vc_dcs_write(TCH, cmd_temp_control_setting, sizeof(cmd_temp_control_setting));
+    if (r)
+            goto err;
 
 	r = dsi_vc_dcs_write(TCH, mipi_setting, sizeof(mipi_setting));
     if (r)
