@@ -1604,8 +1604,11 @@ static irqreturn_t generic_interrupt(int irq, void *__hci)
 	musb->int_tx = musb_readw(musb->mregs, MUSB_INTRTX);
 	musb->int_rx = musb_readw(musb->mregs, MUSB_INTRRX);
 
-	if (musb->int_usb || musb->int_tx || musb->int_rx)
+	if (musb->int_usb || musb->int_tx || musb->int_rx) {
+		del_timer(&musb->att2_timer);
+        musb->att2_state = MUSB_ATT2_HOST;
 		retval = musb_interrupt(musb);
+    }
 
 	/* Poll for ID change */
 	if (musb->ops->id_poll)
@@ -1843,6 +1846,34 @@ musb_vbus_show(struct device *dev, struct device_attribute *attr, char *buf)
 }
 static DEVICE_ATTR(vbus, 0644, musb_vbus_show, musb_vbus_store);
 
+static ssize_t
+musb_att2_show(struct device *dev, struct device_attribute *attr, char *buf)
+{
+	struct musb	*musb = dev_to_musb(dev);
+	unsigned long	flags;
+	unsigned long	val;
+    int ret =  -EINVAL;
+
+	spin_lock_irqsave(&musb->lock, flags);
+	val = musb->att2_state;
+	spin_unlock_irqrestore(&musb->lock, flags);
+
+    switch (val) {
+    case MUSB_ATT2_NONE:
+        ret = sprintf(buf, "none\n");
+        break;
+    case MUSB_ATT2_HOST:
+        ret = sprintf(buf, "host\n");
+        break;
+    case MUSB_ATT2_WALL:
+        ret = sprintf(buf, "wall\n");
+        break;
+    }
+
+    return ret;
+}
+static DEVICE_ATTR(att2, S_IRUGO, musb_att2_show, NULL);
+
 #ifdef CONFIG_USB_GADGET_MUSB_HDRC
 
 /* Gadget drivers can't know that a host is connected so they might want
@@ -1876,6 +1907,7 @@ static struct attribute *musb_attributes[] = {
 #ifdef CONFIG_USB_GADGET_MUSB_HDRC
 	&dev_attr_srp.attr,
 #endif
+	&dev_attr_att2.attr,
 	NULL
 };
 
@@ -1985,6 +2017,26 @@ static void musb_free(struct musb *musb)
 #endif
 }
 
+
+static u32 att2_timer_cout = 0;
+static void att2_timer_func(unsigned long _musb)
+{
+    struct musb *musb = (void *)_musb;
+
+    /* We have to do some workaround here. Looks like USB,
+     * when connecting to USB host for the very first time
+     * since power cycle, doesn't generate interrups, so
+     * we might think wall for host and ask for 1.2A -- too bad.
+     * So skip the first timer hit no matter what.
+     */
+    if (att2_timer_cout) {
+        musb->att2_state = MUSB_ATT2_WALL;
+        DBG(3, "Fired!\n");
+    }
+
+    att2_timer_cout++;
+}
+
 /*
  * Perform generic per-controller initialization.
  *
@@ -2064,6 +2116,10 @@ bad_config:
 	musb->min_power = plat->min_power;
 	musb->ops = plat->platform_ops;
 	musb->id = pdev->id;
+
+    /* Setup timer to follow generic_interrupt */
+    /* TODO: take care of timer on remove */
+	setup_timer(&musb->att2_timer, att2_timer_func, (unsigned long) musb);
 
 	if (fifo_mode == -1)
 		fifo_mode = musb->ops->fifo_mode;

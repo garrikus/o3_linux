@@ -303,6 +303,11 @@ static int musb_otg_notifications(struct notifier_block *nb,
 	case USB_EVENT_VBUS:
 		DBG(4, "VBUS Connect\n");
 
+        /* Start timer to figure all-silent wall charger
+         * from conversational host.
+         */
+        musb->att2_state = MUSB_ATT2_HOST;
+		mod_timer(&musb->att2_timer, jiffies + msecs_to_jiffies(750));
 		otg_init(musb->xceiv);
 		break;
 
@@ -313,6 +318,9 @@ static int musb_otg_notifications(struct notifier_block *nb,
 			if (musb->xceiv->set_vbus)
 				otg_set_vbus(musb->xceiv, 0);
 		}
+
+		del_timer(&musb->att2_timer);
+        musb->att2_state = MUSB_ATT2_NONE;
 		otg_shutdown(musb->xceiv);
 		break;
 	default:

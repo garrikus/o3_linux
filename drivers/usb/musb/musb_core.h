@@ -198,6 +198,14 @@ enum musb_g_ep0_state {
 	MUSB_EP0_STAGE_ACKWAIT,		/* after zlp, before statusin */
 } __attribute__ ((packed));
 
+/* Helps telling host from wall charger */
+enum musb_attached2_state {
+    MUSB_ATT2_NONE,         /* Disconnected */
+    MUSB_ATT2_SLAVE,        /* We are the host */
+    MUSB_ATT2_HOST,         /* Attached to HOST */
+    MUSB_ATT2_WALL,         /* Attached to wall-charger */
+} __attribute__((packed));
+
 /* OTG protocol constants */
 #define OTG_TIME_A_WAIT_VRISE	100		/* msec (max) */
 #define OTG_TIME_A_WAIT_BCON	0		/* 0=infinite; min 1000 msec */
@@ -511,6 +519,10 @@ struct musb {
 #endif
 	/* id for multiple musb instances */
 	u8			id;
+
+    /* Telling host from wall support */
+    struct timer_list att2_timer;
+    enum musb_attached2_state  att2_state;
 };
 
 #ifdef CONFIG_USB_GADGET_MUSB_HDRC
