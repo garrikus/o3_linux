@@ -2017,24 +2017,12 @@ static void musb_free(struct musb *musb)
 #endif
 }
 
-
-static u32 att2_timer_cout = 0;
 static void att2_timer_func(unsigned long _musb)
 {
     struct musb *musb = (void *)_musb;
 
-    /* We have to do some workaround here. Looks like USB,
-     * when connecting to USB host for the very first time
-     * since power cycle, doesn't generate interrups, so
-     * we might think wall for host and ask for 1.2A -- too bad.
-     * So skip the first timer hit no matter what.
-     */
-    if (att2_timer_cout) {
-        musb->att2_state = MUSB_ATT2_WALL;
-        DBG(3, "Fired!\n");
-    }
-
-    att2_timer_cout++;
+    musb->att2_state = MUSB_ATT2_WALL;
+    DBG(3, "Fired!\n");
 }
 
 /*
