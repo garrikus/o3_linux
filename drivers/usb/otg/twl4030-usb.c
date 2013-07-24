@@ -524,6 +524,10 @@ static void twl4030_usb_phy_init(struct twl4030_usb *twl)
 {
 	int status;
 
+    /* FIXME: Keep it enabled for a while. */
+    __twl4030_phy_resume(twl);
+    mdelay(20);
+
 	status = twl4030_usb_linkstat(twl);
 	if (status >= 0) {
 		if (status == USB_EVENT_NONE) {
