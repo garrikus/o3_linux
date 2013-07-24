@@ -307,7 +307,7 @@ static int musb_otg_notifications(struct notifier_block *nb,
          * from conversational host.
          */
         musb->att2_state = MUSB_ATT2_HOST;
-		mod_timer(&musb->att2_timer, jiffies + msecs_to_jiffies(750));
+		mod_timer(&musb->att2_timer, jiffies + msecs_to_jiffies(1000));
 		otg_init(musb->xceiv);
 		break;
 
