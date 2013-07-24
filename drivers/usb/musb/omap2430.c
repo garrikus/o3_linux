@@ -397,7 +397,8 @@ static int omap2430_musb_init(struct musb *musb)
 		DBG(1, "notification register failed\n");
 
 	/* check whether cable is already connected */
-	if (musb->xceiv->state ==OTG_STATE_B_IDLE)
+	if (musb->xceiv->last_event == USB_EVENT_VBUS ||
+       musb->xceiv->last_event == USB_EVENT_ID)
 		musb_otg_notifications(&musb->nb, 1,
 					musb->xceiv->gadget);
 
