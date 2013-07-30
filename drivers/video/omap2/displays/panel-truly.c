@@ -174,6 +174,14 @@ enum {
 	PANEL_TAAL,
 };
 
+static struct panel_regulator truly_regulators[] = {
+    {
+        .name   = "lcd_2v8",
+        .min_uV = 2800000,
+        .max_uV = 2800000,
+    },
+};
+
 static struct panel_config panel_configs[] = {
 	{
 		.name		= "truly_panel",
@@ -192,6 +200,8 @@ static struct panel_config panel_configs[] = {
 			.high		= 10,
 			.low		= 15,
 		},
+        .regulators     = truly_regulators,
+        .num_regulators = 1,
 	},
 };
 
