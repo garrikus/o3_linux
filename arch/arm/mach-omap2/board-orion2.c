@@ -354,7 +354,7 @@ static struct i2c_board_info __initdata omap3orion_i2c_boardinfo2[] = {
 static struct i2c_board_info __initdata omap3orion_i2c_boardinfo3[] = {
 	{
 		/* Charger */
-		I2C_BOARD_INFO("ltc4155", 0x12),
+		I2C_BOARD_INFO("ltc4155", 0x09),
 	},
 	{
 		/* Fuel gauge */
@@ -378,7 +378,7 @@ static int __init omap3_evm_i2c_init(void)
 			ARRAY_SIZE(omap3orion_i2c_boardinfo2));
 
 	/* Bus 3. Charge control and Fuel Gauge */
-	omap_register_i2c_bus(3, 400, omap3orion_i2c_boardinfo3,
+	omap_register_i2c_bus(3, 100, omap3orion_i2c_boardinfo3,
 		        ARRAY_SIZE(omap3orion_i2c_boardinfo3));
 	return 0;
 }
