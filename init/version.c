@@ -11,6 +11,7 @@
 #include <linux/uts.h>
 #include <linux/utsname.h>
 #include <generated/utsrelease.h>
+#include <generated/btdrelease.h>
 #include <linux/version.h>
 
 #ifndef CONFIG_KALLSYMS
@@ -45,3 +46,6 @@ const char linux_proc_banner[] =
 	"%s version %s"
 	" (" LINUX_COMPILE_BY "@" LINUX_COMPILE_HOST ")"
 	" (" LINUX_COMPILER ") %s\n";
+
+const char btd_banner[] =
+    "LKE-version-id: " BTD_RELEASE "\n";

@@ -4,6 +4,8 @@ SUBLEVEL = 37
 EXTRAVERSION =
 NAME = Flesh-Eating Bats with Fangs
 
+BTD_ID = "-01"
+
 # *DOCUMENTATION*
 # To see a list of typical targets execute "make help"
 # More info can be located in ./README
@@ -366,7 +368,9 @@ KBUILD_LDFLAGS_MODULE := -T $(srctree)/scripts/module-common.lds
 KERNELRELEASE = $(shell cat include/config/kernel.release 2> /dev/null)
 KERNELVERSION = $(VERSION).$(PATCHLEVEL).$(SUBLEVEL)$(EXTRAVERSION)
 
-export VERSION PATCHLEVEL SUBLEVEL KERNELRELEASE KERNELVERSION
+BTDRELEASE = $(shell cat include/config/btd.release 2> /dev/null)
+
+export VERSION PATCHLEVEL SUBLEVEL KERNELRELEASE KERNELVERSION BTDRELEASE
 export ARCH SRCARCH CONFIG_SHELL HOSTCC HOSTCFLAGS CROSS_COMPILE AS LD CC
 export CPP AR NM STRIP OBJCOPY OBJDUMP
 export MAKE AWK GENKSYMS INSTALLKERNEL PERL UTS_MACHINE
@@ -918,6 +922,10 @@ include/config/kernel.release: include/config/auto.conf FORCE
 	$(Q)rm -f $@
 	$(Q)echo "$(KERNELVERSION)$$($(CONFIG_SHELL) $(srctree)/scripts/setlocalversion $(srctree))" > $@
 
+include/config/btd.release: include/config/auto.conf FORCE
+	$(Q)rm -f $@
+	$(Q)echo "$$($(CONFIG_SHELL) $(srctree)/scripts/setlocalversion $(srctree)|awk -F- '{if (NF==3){ print "-"$$NF;}else{print "-"$$(NF-1)"-"$$(NF);}};')$(BTD_ID)" > $@
+
 
 # Things we need to do before we recursively start building the kernel
 # or the modules are listed in "prepare".
@@ -945,7 +953,7 @@ endif
 prepare2: prepare3 outputmakefile
 
 prepare1: prepare2 include/linux/version.h include/generated/utsrelease.h \
-                   include/config/auto.conf
+                   include/config/auto.conf include/generated/btdrelease.h
 	$(cmd_crmodverdir)
 
 archprepare: prepare1 scripts_basic
@@ -978,11 +986,18 @@ define filechk_version.h
 	echo '#define KERNEL_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))';)
 endef
 
+define filechk_btdrelease.h
+	(echo \#define BTD_RELEASE \"$(BTDRELEASE)\";)
+endef
+
 include/linux/version.h: $(srctree)/Makefile FORCE
 	$(call filechk,version.h)
 
 include/generated/utsrelease.h: include/config/kernel.release FORCE
 	$(call filechk,utsrelease.h)
+
+include/generated/btdrelease.h: include/config/btd.release FORCE
+	$(call filechk,btdrelease.h)
 
 PHONY += headerdep
 headerdep:

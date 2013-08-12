@@ -3,6 +3,7 @@
 
 extern const char linux_banner[];
 extern const char linux_proc_banner[];
+extern const char btd_banner[];
 
 #define	KERN_EMERG	"<0>"	/* system is unusable			*/
 #define	KERN_ALERT	"<1>"	/* action must be taken immediately	*/
