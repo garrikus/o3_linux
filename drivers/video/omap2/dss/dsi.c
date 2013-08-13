@@ -38,7 +38,6 @@
 #include <plat/clock.h>
 
 #include "dss.h"
-int dsi_wd_flag = 0;
 
 /*#define VERBOSE_IRQ*/
 #define DSI_CATCH_MISSING_TE
@@ -2011,7 +2010,7 @@ static int dsi_vc_send_long(int channel, u8 data_type, u8 *data, u16 len,
 	int r = 0;
 	u8 b1, b2, b3, b4;
 
-	if (dsi_wd_flag && dsi.debug_write)
+	if (dsi.debug_write)
 		DSSDBG("dsi_vc_send_long, %d bytes\n", len);
 
 	/* len + header */
@@ -2026,7 +2025,7 @@ static int dsi_vc_send_long(int channel, u8 data_type, u8 *data, u16 len,
 
 	p = data;
 	for (i = 0; i < len >> 2; i++) {
-		if (0 && dsi.debug_write)
+		if (dsi.debug_write)
 			DSSDBG("\tsending full packet %d\n", i);
 
 		b1 = *p++;
@@ -2041,7 +2040,7 @@ static int dsi_vc_send_long(int channel, u8 data_type, u8 *data, u16 len,
 	if (i) {
 		b1 = 0; b2 = 0; b3 = 0;
 
-		if (0 && dsi.debug_write)
+		if (dsi.debug_write)
 			DSSDBG("\tsending remainder bytes %d\n", i);
 
 		switch (i) {
@@ -2072,7 +2071,7 @@ static int dsi_vc_send_short(int channel, u8 data_type, u16 data, u8 ecc)
 
 	WARN_ON(!dsi_bus_is_locked());
 
-	if (0 && dsi.debug_write)
+	if (dsi.debug_write)
 		DSSDBG("dsi_vc_send_short(ch%d, dt %#x, b1 %#x, b2 %#x)\n",
 				channel,
 				data_type, data & 0xff, (data >> 8) & 0xff);
@@ -2721,8 +2720,6 @@ static void dsi_update_screen_dispc(struct omap_dss_device *dssdev,
 	bytespl = w * bytespp;
 	bytespf = bytespl * h;
 
-	DSSDBG("bpp=%d,bpl=%d,bpf=%d\n", bytespp, bytespl, bytespf);
-
 	/* NOTE: packet_payload has to be equal to N * bytespl, where N is
 	 * number of lines in a packet.  See errata about VP_CLK_RATIO */
 
@@ -2736,8 +2733,6 @@ static void dsi_update_screen_dispc(struct omap_dss_device *dssdev,
 
 	if (bytespf % packet_payload)
 		total_len += (bytespf % packet_payload) + 1;
-
-	DSSDBG("pack_pl=%d,pack_len=%d,ttl_len=%d\n", packet_payload, packet_len, total_len);
 
 	l = FLD_VAL(total_len, 23, 0); /* TE_SIZE */
 	dsi_write_reg(DSI_VC_TE(channel), l);
@@ -3013,8 +3008,6 @@ static int dsi_configure_dsi_clocks(struct omap_dss_device *dssdev)
 	cinfo.regm3 = dssdev->phy.dsi.div.regm3;
 	cinfo.regm4 = dssdev->phy.dsi.div.regm4;
 	r = dsi_calc_clock_rates(&cinfo);
-    DSSERR("Calced: dsi1pll:%ld dsi2pll:%ld\n",
-            cinfo.dsi1_pll_fclk, cinfo.dsi2_pll_fclk);
 	if (r) {
 		DSSERR("Failed to calc dsi clocks\n");
 		return r;
@@ -3036,7 +3029,6 @@ static int dsi_configure_dispc_clocks(struct omap_dss_device *dssdev)
 	unsigned long long fck;
 
 	fck = dsi_get_dsi1_pll_rate();
-    DSSERR("RATE %ld\n", fck);
 
 	dispc_cinfo.lck_div = dssdev->phy.dsi.div.lck_div;
 	dispc_cinfo.pck_div = dssdev->phy.dsi.div.pck_div;
@@ -3270,9 +3262,6 @@ int dsi_init(struct platform_device *pdev)
 
 	spin_lock_init(&dsi.errors_lock);
 	dsi.errors = 0;
-
-    dsi.debug_write = 1;
-
 
 #ifdef CONFIG_OMAP2_DSS_COLLECT_IRQ_STATS
 	spin_lock_init(&dsi.irq_stats_lock);
