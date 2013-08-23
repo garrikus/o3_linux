@@ -56,8 +56,9 @@
 #define ORION_TS_GPIO          14
 #define ORION2_KEYPAD_IRQGPIO  15
 
-#define ORION2_DSIDBI_GPIO     181
 #define ORION2_DSI_CMDVID_GPIO 178
+#define ORION2_DSI_PANEL_RESET 180
+#define ORION2_DSIDBI_GPIO     181
 
 static int lcd_enabled;
 
@@ -79,8 +80,17 @@ static void __init omap3_evm_display_init(void)
 	}
 	gpio_direction_output(ORION2_DSI_CMDVID_GPIO, 0);
 
+	r = gpio_request(ORION2_DSI_PANEL_RESET, "lcd_dsi_panel_reset");
+	if (r) {
+		printk(KERN_ERR "failed to get lcd_dsi_panel_reset\n");
+		goto err_2;
+	}
+	gpio_direction_output(ORION2_DSI_PANEL_RESET, 0);
+
 	return;
 
+err_2:
+	gpio_free(ORION2_DSI_CMDVID_GPIO);
 err_1:
 	gpio_free(ORION2_DSIDBI_GPIO);
 
@@ -100,7 +110,7 @@ static void omap3_evm_disable_lcd(struct omap_dss_device *dssdev)
 
 static struct nokia_dsi_panel_data panel_data = {
     .name = "truly_panel",
-    .reset_gpio = -1,
+    .reset_gpio = ORION2_DSI_PANEL_RESET,
 };
 
 static struct omap_dss_device omap3_evm_lcd_device = {

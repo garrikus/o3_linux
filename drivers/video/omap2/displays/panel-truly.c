@@ -193,12 +193,12 @@ static struct panel_config panel_configs[] = {
 		.sleep		= {
 			.sleep_in	= 5,
 			.sleep_out	= 5,
-			.hw_reset	= 5,
+			.hw_reset	= 120,
 			.enable_te	= 100, /* possible panel bug */
 		},
 		.reset_sequence	= {
-			.high		= 10,
-			.low		= 15,
+			.high		= 100,
+			.low		= 100,
 		},
         .regulators     = truly_regulators,
         .num_regulators = 1,
