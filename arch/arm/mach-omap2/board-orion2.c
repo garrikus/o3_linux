@@ -162,9 +162,8 @@ static struct platform_device omap3_evm_dss_device = {
 	},
 };
 
-static struct regulator_consumer_supply omap3evm_vaux3_supply = {
-	.supply         = "lcd_2v8",
-	.dev	    	= &omap3_evm_dss_device.dev,
+static struct regulator_consumer_supply omap3evm_vaux3_supply[] = {
+	REGULATOR_SUPPLY("lcd_2v8", "display0"),
 };
 
 /* VAUX3 for LCD */
@@ -179,7 +178,7 @@ static struct regulator_init_data omap3evm_vaux3 = {
 					| REGULATOR_CHANGE_STATUS,
 	},
 	.num_consumer_supplies  = 1,
-	.consumer_supplies      = &omap3evm_vaux3_supply,
+	.consumer_supplies      = omap3evm_vaux3_supply,
 };
 
 static struct regulator_consumer_supply omap3evm_vmmc1_supply = {
@@ -355,7 +354,7 @@ static struct i2c_board_info __initdata omap3orion_i2c_boardinfo2[] = {
 static struct i2c_board_info __initdata omap3orion_i2c_boardinfo3[] = {
 	{
 		/* Charger */
-		I2C_BOARD_INFO("ltc4155", 0x12),
+		I2C_BOARD_INFO("ltc4155", 0x09),
 	},
 	{
 		/* Fuel gauge */
@@ -379,7 +378,7 @@ static int __init omap3_evm_i2c_init(void)
 			ARRAY_SIZE(omap3orion_i2c_boardinfo2));
 
 	/* Bus 3. Charge control and Fuel Gauge */
-	omap_register_i2c_bus(3, 400, omap3orion_i2c_boardinfo3,
+	omap_register_i2c_bus(3, 100, omap3orion_i2c_boardinfo3,
 		        ARRAY_SIZE(omap3orion_i2c_boardinfo3));
 	return 0;
 }
