@@ -102,56 +102,45 @@ static void fill_fb(struct fb_info *fbi)
 	void __iomem *addr = fbi->screen_base;
 	int y, x;
 
+    int set_n; /* We'll be drawing 20 sets of lines */
+    int delta; /* Each set "the gap" moves 4px to the left*/
+    int y_cnt; /* Line counter in a set */
+
 	if (!addr)
 		return;
 
 	DBG("fill_fb %dx%d, line_len %d bytes\n", w, h, fbi->fix.line_length);
 
-	for (y = 0; y < h; y++) {
-		for (x = 0; x < w; x++) {
-			if (x < 20 && y < 20)
-				draw_pixel(fbi, x, y, 0xffffff);
-			else if (x < 20 && (y > 20 && y < h - 20))
-				draw_pixel(fbi, x, y, 0xff);
-			else if (y < 20 && (x > 20 && x < w - 20))
-				draw_pixel(fbi, x, y, 0xff00);
-			else if (x > w - 20 && (y > 20 && y < h - 20))
-				draw_pixel(fbi, x, y, 0xff0000);
-			else if (y > h - 20 && (x > 20 && x < w - 20))
-				draw_pixel(fbi, x, y, 0xffff00);
-			else if (x == 20 || x == w - 20 ||
-					y == 20 || y == h - 20)
-				draw_pixel(fbi, x, y, 0xffffff);
-			else if (x == y || w - x == h - y)
-				draw_pixel(fbi, x, y, 0xff00ff);
-			else if (w - x == y || x == h - y)
-				draw_pixel(fbi, x, y, 0x00ffff);
-			else if (x > 20 && y > 20 && x < w - 20 && y < h - 20) {
-				int t = x * 3 / w;
-				unsigned r = 0, g = 0, b = 0;
-				unsigned c;
-				if (var->bits_per_pixel == 16) {
-					if (t == 0)
-						b = (y % 32) * 256 / 32;
-					else if (t == 1)
-						g = (y % 64) * 256 / 64;
-					else if (t == 2)
-						r = (y % 32) * 256 / 32;
-				} else {
-					if (t == 0)
-						b = (y % 256);
-					else if (t == 1)
-						g = (y % 256);
-					else if (t == 2)
-						r = (y % 256);
-				}
-				c = (r << 16) | (g << 8) | (b << 0);
-				draw_pixel(fbi, x, y, c);
-			} else {
-				draw_pixel(fbi, x, y, 0);
-			}
-		}
-	}
+    y     = 150;
+    delta = 4;
+    for (set_n = 0; set_n < 20; ++set_n) {
+        for (y_cnt = 0; y_cnt < 22; ++y_cnt) {
+            if (y_cnt <= 16) {
+                /* XXX: All the loops below move x forward */
+                x = 56;
+
+                for (; x < 56 + 103-set_n*delta; ++x)
+                    draw_pixel(fbi, x, y + y_cnt, 0xffff00);
+
+
+                if (y_cnt > 12 || (set_n >= 9 && set_n <=11)) {
+                    for (; x < 56 + 103 - set_n*delta + 150; ++x)
+                        draw_pixel(fbi, x, y + y_cnt, 0xffff00);
+                }
+                else {
+                    x = 56 + 103 - set_n*delta + 150;
+                }
+
+
+                for (; x < 56 + 288; ++x)
+                    draw_pixel(fbi, x, y + y_cnt, 0xffff00);
+
+            }
+        }
+
+        /*XXX:!!! y_cnt comes from the cycle above */
+        y += y_cnt;
+    }
 }
 #endif
 
