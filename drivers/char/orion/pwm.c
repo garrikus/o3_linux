@@ -271,6 +271,9 @@ static int pwm_timer_init(void)
 		pwm_dev[i].input_freq = clk_get_rate(fclk);
 
 		pwm_set_frequency(&pwm_dev[i]);
+
+        if (pwm_dev[i].id == 9)
+            pwm_set_duty_cycle(&pwm_dev[i], 50);
 	}
 
 	if (servo) {
