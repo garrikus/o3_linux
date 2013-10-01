@@ -46,6 +46,7 @@ static char *def_vram;
 static int def_vrfb;
 static int def_rotate;
 static int def_mirror;
+static unsigned int omapfb_logo_pattern;
 
 #ifdef DEBUG
 unsigned int omapfb_debug;
@@ -58,7 +59,6 @@ static int omapfb_fb_init(struct omapfb2_device *fbdev, struct fb_info *fbi);
 static int omapfb_get_recommended_bpp(struct omapfb2_device *fbdev,
 		struct omap_dss_device *dssdev);
 
-#ifdef DEBUG
 static void draw_pixel(struct fb_info *fbi, int x, int y, unsigned color)
 {
 	struct fb_var_screeninfo *var = &fbi->var;
@@ -94,6 +94,56 @@ static void draw_pixel(struct fb_info *fbi, int x, int y, unsigned color)
 	}
 }
 
+static void fill_fb_with_logo(struct fb_info *fbi)
+{
+	struct fb_var_screeninfo *var = &fbi->var;
+	const short w = var->xres_virtual;
+	const short h = var->yres_virtual;
+	void __iomem *addr = fbi->screen_base;
+	int y, x;
+
+    int set_n; /* We'll be drawing 20 sets of lines */
+    int delta; /* Each set "the gap" moves 4px to the left*/
+    int y_cnt; /* Line counter in a set */
+
+	if (!addr)
+		return;
+
+	DBG("fill_fb_with_logo %dx%d, line_len %d bytes\n", w, h, fbi->fix.line_length);
+
+    y     = 150;
+    delta = 4;
+    for (set_n = 0; set_n < 20; ++set_n) {
+        for (y_cnt = 0; y_cnt < 22; ++y_cnt) {
+            if (y_cnt <= 16) {
+                /* XXX: All the loops below move x forward */
+                x = 70;
+
+                for (; x < 70 + 103-set_n*delta; ++x)
+                    draw_pixel(fbi, x, y + y_cnt, 0xffff00);
+
+
+                if (y_cnt > 12 || (set_n >= 9 && set_n <=11)) {
+                    for (; x < 70 + 103 - set_n*delta + 150; ++x)
+                        draw_pixel(fbi, x, y + y_cnt, 0xffff00);
+                }
+                else {
+                    x = 70 + 103 - set_n*delta + 150;
+                }
+
+
+                for (; x < 70 + 288; ++x)
+                    draw_pixel(fbi, x, y + y_cnt, 0xffff00);
+
+            }
+        }
+
+        /*XXX:!!! y_cnt comes from the cycle above */
+        y += y_cnt;
+    }
+}
+
+#ifdef DEBUG
 static void fill_fb(struct fb_info *fbi)
 {
 	struct fb_var_screeninfo *var = &fbi->var;
@@ -983,6 +1033,7 @@ err:
 }
 
 /* apply var to the overlay */
+static int logo_shown = 0;
 int omapfb_apply_changes(struct fb_info *fbi, int init)
 {
 	int r = 0;
@@ -997,6 +1048,12 @@ int omapfb_apply_changes(struct fb_info *fbi, int init)
 	if (omapfb_test_pattern)
 		fill_fb(fbi);
 #endif
+
+	if (omapfb_logo_pattern && !logo_shown)
+    {
+		fill_fb_with_logo(fbi);
+        logo_shown++;
+    }
 
 	WARN_ON(!atomic_read(&ofbi->region->lock_count));
 
@@ -2400,6 +2457,7 @@ module_param_named(vram, def_vram, charp, 0);
 module_param_named(rotate, def_rotate, int, 0);
 module_param_named(vrfb, def_vrfb, bool, 0);
 module_param_named(mirror, def_mirror, bool, 0);
+module_param_named(o2logo, omapfb_logo_pattern, bool, 0);
 
 /* late_initcall to let panel/ctrl drivers loaded first.
  * I guess better option would be a more dynamic approach,
