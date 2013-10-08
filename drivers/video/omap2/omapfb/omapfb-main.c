@@ -46,6 +46,7 @@ static char *def_vram;
 static int def_vrfb;
 static int def_rotate;
 static int def_mirror;
+static unsigned int omapfb_logo_pattern;
 
 #ifdef DEBUG
 unsigned int omapfb_debug;
@@ -58,7 +59,6 @@ static int omapfb_fb_init(struct omapfb2_device *fbdev, struct fb_info *fbi);
 static int omapfb_get_recommended_bpp(struct omapfb2_device *fbdev,
 		struct omap_dss_device *dssdev);
 
-#ifdef DEBUG
 static void draw_pixel(struct fb_info *fbi, int x, int y, unsigned color)
 {
 	struct fb_var_screeninfo *var = &fbi->var;
@@ -94,7 +94,7 @@ static void draw_pixel(struct fb_info *fbi, int x, int y, unsigned color)
 	}
 }
 
-static void fill_fb(struct fb_info *fbi)
+static void fill_fb_with_logo(struct fb_info *fbi)
 {
 	struct fb_var_screeninfo *var = &fbi->var;
 	const short w = var->xres_virtual;
@@ -109,7 +109,7 @@ static void fill_fb(struct fb_info *fbi)
 	if (!addr)
 		return;
 
-	DBG("fill_fb %dx%d, line_len %d bytes\n", w, h, fbi->fix.line_length);
+	DBG("fill_fb_with_logo %dx%d, line_len %d bytes\n", w, h, fbi->fix.line_length);
 
     y     = 150;
     delta = 4;
@@ -117,22 +117,22 @@ static void fill_fb(struct fb_info *fbi)
         for (y_cnt = 0; y_cnt < 22; ++y_cnt) {
             if (y_cnt <= 16) {
                 /* XXX: All the loops below move x forward */
-                x = 56;
+                x = 70;
 
-                for (; x < 56 + 103-set_n*delta; ++x)
+                for (; x < 70 + 103-set_n*delta; ++x)
                     draw_pixel(fbi, x, y + y_cnt, 0xffff00);
 
 
                 if (y_cnt > 12 || (set_n >= 9 && set_n <=11)) {
-                    for (; x < 56 + 103 - set_n*delta + 150; ++x)
+                    for (; x < 70 + 103 - set_n*delta + 150; ++x)
                         draw_pixel(fbi, x, y + y_cnt, 0xffff00);
                 }
                 else {
-                    x = 56 + 103 - set_n*delta + 150;
+                    x = 70 + 103 - set_n*delta + 150;
                 }
 
 
-                for (; x < 56 + 288; ++x)
+                for (; x < 70 + 288; ++x)
                     draw_pixel(fbi, x, y + y_cnt, 0xffff00);
 
             }
@@ -141,6 +141,67 @@ static void fill_fb(struct fb_info *fbi)
         /*XXX:!!! y_cnt comes from the cycle above */
         y += y_cnt;
     }
+}
+
+#ifdef DEBUG
+static void fill_fb(struct fb_info *fbi)
+{
+	struct fb_var_screeninfo *var = &fbi->var;
+	const short w = var->xres_virtual;
+	const short h = var->yres_virtual;
+	void __iomem *addr = fbi->screen_base;
+	int y, x;
+
+	if (!addr)
+		return;
+
+	DBG("fill_fb %dx%d, line_len %d bytes\n", w, h, fbi->fix.line_length);
+
+	for (y = 0; y < h; y++) {
+		for (x = 0; x < w; x++) {
+			if (x < 20 && y < 20)
+				draw_pixel(fbi, x, y, 0xffffff);
+			else if (x < 20 && (y > 20 && y < h - 20))
+				draw_pixel(fbi, x, y, 0xff);
+			else if (y < 20 && (x > 20 && x < w - 20))
+				draw_pixel(fbi, x, y, 0xff00);
+			else if (x > w - 20 && (y > 20 && y < h - 20))
+				draw_pixel(fbi, x, y, 0xff0000);
+			else if (y > h - 20 && (x > 20 && x < w - 20))
+				draw_pixel(fbi, x, y, 0xffff00);
+			else if (x == 20 || x == w - 20 ||
+					y == 20 || y == h - 20)
+				draw_pixel(fbi, x, y, 0xffffff);
+			else if (x == y || w - x == h - y)
+				draw_pixel(fbi, x, y, 0xff00ff);
+			else if (w - x == y || x == h - y)
+				draw_pixel(fbi, x, y, 0x00ffff);
+			else if (x > 20 && y > 20 && x < w - 20 && y < h - 20) {
+				int t = x * 3 / w;
+				unsigned r = 0, g = 0, b = 0;
+				unsigned c;
+				if (var->bits_per_pixel == 16) {
+					if (t == 0)
+						b = (y % 32) * 256 / 32;
+					else if (t == 1)
+						g = (y % 64) * 256 / 64;
+					else if (t == 2)
+						r = (y % 32) * 256 / 32;
+				} else {
+					if (t == 0)
+						b = (y % 256);
+					else if (t == 1)
+						g = (y % 256);
+					else if (t == 2)
+						r = (y % 256);
+				}
+				c = (r << 16) | (g << 8) | (b << 0);
+				draw_pixel(fbi, x, y, c);
+			} else {
+				draw_pixel(fbi, x, y, 0);
+			}
+		}
+	}
 }
 #endif
 
@@ -971,8 +1032,8 @@ err:
 	return r;
 }
 
-static int pattern_shown = 0;
 /* apply var to the overlay */
+static int logo_shown = 0;
 int omapfb_apply_changes(struct fb_info *fbi, int init)
 {
 	int r = 0;
@@ -984,12 +1045,15 @@ int omapfb_apply_changes(struct fb_info *fbi, int init)
 	int i;
 
 #ifdef DEBUG
-	if (omapfb_test_pattern && !pattern_shown)
-    {
+	if (omapfb_test_pattern)
 		fill_fb(fbi);
-        pattern_shown++;
-    }
 #endif
+
+	if (omapfb_logo_pattern && !logo_shown)
+    {
+		fill_fb_with_logo(fbi);
+        logo_shown++;
+    }
 
 	WARN_ON(!atomic_read(&ofbi->region->lock_count));
 
@@ -2393,6 +2457,7 @@ module_param_named(vram, def_vram, charp, 0);
 module_param_named(rotate, def_rotate, int, 0);
 module_param_named(vrfb, def_vrfb, bool, 0);
 module_param_named(mirror, def_mirror, bool, 0);
+module_param_named(o2logo, omapfb_logo_pattern, bool, 0);
 
 /* late_initcall to let panel/ctrl drivers loaded first.
  * I guess better option would be a more dynamic approach,
