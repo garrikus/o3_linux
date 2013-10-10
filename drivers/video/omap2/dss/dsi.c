@@ -3013,8 +3013,6 @@ static int dsi_configure_dsi_clocks(struct omap_dss_device *dssdev)
 	cinfo.regm3 = dssdev->phy.dsi.div.regm3;
 	cinfo.regm4 = dssdev->phy.dsi.div.regm4;
 	r = dsi_calc_clock_rates(&cinfo);
-    DSSERR("Calced: dsi1pll:%ld dsi2pll:%ld\n",
-            cinfo.dsi1_pll_fclk, cinfo.dsi2_pll_fclk);
 	if (r) {
 		DSSERR("Failed to calc dsi clocks\n");
 		return r;
@@ -3036,7 +3034,6 @@ static int dsi_configure_dispc_clocks(struct omap_dss_device *dssdev)
 	unsigned long long fck;
 
 	fck = dsi_get_dsi1_pll_rate();
-    DSSERR("RATE %ld\n", fck);
 
 	dispc_cinfo.lck_div = dssdev->phy.dsi.div.lck_div;
 	dispc_cinfo.pck_div = dssdev->phy.dsi.div.pck_div;
