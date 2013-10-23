@@ -487,7 +487,12 @@ static struct mtd_partition omap3_evm_nand_partitions[] = {
 	{
 		.name		= "File System - NAND",
 		.offset		= MTDPART_OFS_APPEND,	/* Offset = 0x780000 */
-		.size		= 0x3e500000,
+		.size		= 0x3e4e0000,
+	},
+	{
+		.name		= "IMGS_MAGIC",
+		.offset		= MTDPART_OFS_APPEND,	/* Offset = 0x3ec60000 */
+		.size		= 0x20000,
 	},
 	{
 		.name		= "IMG1",
