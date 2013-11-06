@@ -524,6 +524,10 @@ static struct omap_musb_board_data musb_board_data = {
 
 static void orion_power_off(void)
 {
+	/* Remove MMC1 from device groups */
+	if(twl_i2c_write_u8(TWL4030_MODULE_PM_RECEIVER, 0x00, 0x27))
+		printk(KERN_ALERT, "VMMC1_DEV_GRP reset failed.\n");
+
 	twl_i2c_write_u8(TWL4030_MODULE_PM_MASTER, 0x01, TWL4030_PM_MASTER_P1_SW_EVENTS);
 
 	/* We should never make it this far */
