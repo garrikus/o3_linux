@@ -495,8 +495,33 @@ static struct mtd_partition omap3_evm_nand_partitions[] = {
 	},
 	{
 		.name		= "File System - NAND",
-		.size		= MTDPART_SIZ_FULL,
 		.offset		= MTDPART_OFS_APPEND,	/* Offset = 0x780000 */
+		.size		= 0x3e4e0000,
+	},
+	{
+		.name		= "IMGS_MAGIC",
+		.offset		= MTDPART_OFS_APPEND,	/* Offset = 0x3ec60000 */
+		.size		= 0x20000,
+	},
+	{
+		.name		= "IMG1",
+		.offset		= MTDPART_OFS_APPEND,	/* Offset = 0x3ec80000 */
+		.size		= 0x180000,
+	},
+	{
+		.name		= "IMG2",
+		.offset		= MTDPART_OFS_APPEND,	/* Offset = 0x3ee00000 */
+		.size		= 0x180000,
+	},
+	{
+		.name		= "IMG3",
+		.offset		= MTDPART_OFS_APPEND,	/* Offset = 0x3ef80000 */
+		.size		= 0x180000,
+	},
+	{
+		.name		= "IMG4",
+		.offset		= MTDPART_OFS_APPEND,	/* Offset = 0x3f100000 */
+		.size		= MTDPART_SIZ_FULL,
 	},
 };
 
@@ -508,6 +533,10 @@ static struct omap_musb_board_data musb_board_data = {
 
 static void orion_power_off(void)
 {
+	/* Remove MMC1 from device groups */
+	if(twl_i2c_write_u8(TWL4030_MODULE_PM_RECEIVER, 0x00, 0x27))
+		printk(KERN_ALERT, "VMMC1_DEV_GRP reset failed.\n");
+
 	twl_i2c_write_u8(TWL4030_MODULE_PM_MASTER, 0x01, TWL4030_PM_MASTER_P1_SW_EVENTS);
 
 	/* We should never make it this far */

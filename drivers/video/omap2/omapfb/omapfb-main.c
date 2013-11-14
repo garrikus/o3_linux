@@ -47,6 +47,7 @@ static int def_vrfb;
 static int def_rotate;
 static int def_mirror;
 static unsigned int omapfb_logo_pattern;
+static unsigned int skip_update;
 
 #ifdef DEBUG
 unsigned int omapfb_debug;
@@ -2379,21 +2380,24 @@ static int omapfb_probe(struct platform_device *pdev)
 			goto cleanup;
 		}
 
-		if (def_display->caps & OMAP_DSS_DISPLAY_CAP_MANUAL_UPDATE) {
-			u16 w, h;
-			if (dssdrv->enable_te)
-				dssdrv->enable_te(def_display, 1);
-			if (dssdrv->set_update_mode)
-				dssdrv->set_update_mode(def_display,
-						OMAP_DSS_UPDATE_MANUAL);
+        if (!skip_update)
+        {
+			if (def_display->caps & OMAP_DSS_DISPLAY_CAP_MANUAL_UPDATE) {
+				u16 w, h;
+				if (dssdrv->enable_te)
+					dssdrv->enable_te(def_display, 1);
+				if (dssdrv->set_update_mode)
+					dssdrv->set_update_mode(def_display,
+							OMAP_DSS_UPDATE_MANUAL);
 
-			dssdrv->get_resolution(def_display, &w, &h);
-			def_display->driver->update(def_display, 0, 0, w, h);
-		} else {
-			if (dssdrv->set_update_mode)
-				dssdrv->set_update_mode(def_display,
-						OMAP_DSS_UPDATE_AUTO);
-		}
+				dssdrv->get_resolution(def_display, &w, &h);
+				def_display->driver->update(def_display, 0, 0, w, h);
+			} else {
+				if (dssdrv->set_update_mode)
+					dssdrv->set_update_mode(def_display,
+							OMAP_DSS_UPDATE_AUTO);
+			}
+        }
 	}
 
 	DBG("create sysfs for fbs\n");
@@ -2458,6 +2462,7 @@ module_param_named(rotate, def_rotate, int, 0);
 module_param_named(vrfb, def_vrfb, bool, 0);
 module_param_named(mirror, def_mirror, bool, 0);
 module_param_named(o2logo, omapfb_logo_pattern, bool, 0);
+module_param_named(skipupd, skip_update, bool, 0);
 
 /* late_initcall to let panel/ctrl drivers loaded first.
  * I guess better option would be a more dynamic approach,
