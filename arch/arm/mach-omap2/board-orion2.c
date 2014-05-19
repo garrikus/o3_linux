@@ -531,11 +531,16 @@ static struct omap_musb_board_data musb_board_data = {
 	.power			= 100,
 };
 
-static void orion_power_off(void)
+static void orion_mmc_power_off()
 {
 	/* Remove MMC1 from device groups */
 	if(twl_i2c_write_u8(TWL4030_MODULE_PM_RECEIVER, 0x00, 0x27))
 		printk(KERN_ALERT, "VMMC1_DEV_GRP reset failed.\n");
+}
+
+static void orion_power_off(void)
+{
+	orion_mmc_power_off();
 
 	twl_i2c_write_u8(TWL4030_MODULE_PM_MASTER, 0x01, TWL4030_PM_MASTER_P1_SW_EVENTS);
 
@@ -544,9 +549,20 @@ static void orion_power_off(void)
 }
 
 
+static void (*original_restart)(char str, const char *cmd);
+static void orion_restart(char str, const char *cmd)
+{
+	orion_mmc_power_off();
+
+	if (original_restart)
+		original_restart(str, cmd);
+}
+
 static void __init omap3_evm_init(void)
 {
 	pm_power_off = orion_power_off;
+	original_restart = arm_pm_restart;
+	arm_pm_restart = orion_restart;
 
     /* TODO: Select one*/
 #if 0
