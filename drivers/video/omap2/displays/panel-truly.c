@@ -862,10 +862,10 @@ static unsigned char mipi_setting[14] = {
 };
 /* command mode setting */
 /* Put 10ms after */
-static unsigned char cmd_gip_setting[27] = {
-			0xD5, 0x00, 0x04, 0x03,
-			0x00, 0x01, 0x05, 0x28,
-			0x70, 0x01, 0x03, 0x00,
+static unsigned char cmd_gip_setting[] = {
+			0xD5, 0x00, 0x03, 0x03,
+			0x00, 0x01, 0x04, 0x28,
+			0x70, 0x11, 0x13, 0x00,
 			0x00, 0x40, 0x06, 0x51,
 			0x07, 0x00, 0x00, 0x41,
 			0x06, 0x50, 0x07, 0x07,
@@ -873,37 +873,92 @@ static unsigned char cmd_gip_setting[27] = {
 };
 
 static unsigned char cmd_temp_control_setting[11] = {
-            0xD8, 0x00, 0x12, 0x76,
+            0xD8, 0x00, 0x12, 0x63,
             0xA7, 0x09, 0x67, 0x50,
-            0x4E, 0x57, 0x75
+            0x4E, 0x17, 0x75
 };
 
+static unsigned char cmd_setpower[] = {
+	0xB1, 0x85, 0x00, 0x25,
+	0x03, 0x00, 0x10, 0x10,
+	0x2A, 0x32, 0x3F, 0x3F,
+	0x01, 0x22, 0x01, 0xE6,
+	0xE6, 0xE6, 0xE6, 0xE6
+};
+
+static unsigned char cmd_setdisp[] = {
+	0xB2, 0x00, 0x20, 0x05,
+	0x05, 0x70, 0x00, 0xFF,
+	0x00, 0x00, 0x00, 0x00,
+	0x03, 0x03, 0x00, 0x01
+};
+
+static unsigned char cmd_setcyc[] = {
+	0xB4, 0x00, 0x18, 0x80,
+	0x06, 0x02
+};
+
+static unsigned char cmd_setvcom[] = {
+	0xB6, 0x3A, 0x3A
+};
+
+static unsigned char cmd_setgamma[] = {
+	0xE0, 0x00, 0x13, 0x19,
+	0x38, 0x3D, 0x3F, 0x28,
+	0x46, 0x07, 0x0D, 0x0E,
+	0x12, 0x15, 0x12, 0x14,
+	0x0F, 0x17, 0x00, 0x13,
+	0x19, 0x38, 0x3D, 0x3F,
+	0x28, 0x46, 0x07, 0x0D,
+	0x0E, 0x12, 0x15, 0x12,
+	0x14, 0x0F, 0x17
+};
 
 static int power_on_panel_init()
 {
-    int r;
+	int r;
 
 	r = dsi_vc_dcs_write(TCH, extend_cmd_enable, sizeof(extend_cmd_enable));
-    if (r)
-            goto err;
+	if (r)
+		goto err;
 
 	r = dsi_vc_dcs_write(TCH, cmd_gip_setting, sizeof(cmd_gip_setting));
-    if (r)
-            goto err;
-    mdelay(10);
+	if (r)
+		goto err;
+	mdelay(10);
 
 	r = dsi_vc_dcs_write(TCH, cmd_temp_control_setting, sizeof(cmd_temp_control_setting));
-    if (r)
-            goto err;
+	if (r)
+		goto err;
 
 	r = dsi_vc_dcs_write(TCH, mipi_setting, sizeof(mipi_setting));
-    if (r)
-            goto err;
+	if (r)
+		goto err;
 
-    return 0;
+	r = dsi_vc_dcs_write(TCH, cmd_setpower, sizeof(cmd_setpower));
+	if (r)
+		goto err;
+
+	r = dsi_vc_dcs_write(TCH, cmd_setdisp, sizeof(cmd_setdisp));
+	if (r)
+		goto err;
+
+	r = dsi_vc_dcs_write(TCH, cmd_setcyc, sizeof(cmd_setcyc));
+	if (r)
+		goto err;
+
+	r = dsi_vc_dcs_write(TCH, cmd_setvcom, sizeof(cmd_setvcom));
+	if (r)
+		goto err;
+
+	r = dsi_vc_dcs_write(TCH, cmd_setgamma, sizeof(cmd_setgamma));
+	if (r)
+		goto err;
+
+	return 0;
 
 err:
-    return r;
+	return r;
 }
 
 static int taal_power_on(struct omap_dss_device *dssdev)
