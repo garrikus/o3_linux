@@ -72,6 +72,7 @@ static ssize_t pwm_write(struct file *filp, const char __user *buff,
 	u32 val;
 	ssize_t status = 0;
 	char temp[16];
+	int enabled;
 
 	struct pwm_dev *pd = filp->private_data;
 
@@ -97,9 +98,11 @@ static ssize_t pwm_write(struct file *filp, const char __user *buff,
 
 	val = simple_strtoul(temp, NULL, 0);
 
-	if (val)
+	enabled = regulator_is_enabled(pd->reg);
+
+	if (val && !enabled)
 		status = regulator_enable(pd->reg);
-	else
+	else if (!val && enabled)
 		status = regulator_disable(pd->reg);
 
 	*offp += count;
