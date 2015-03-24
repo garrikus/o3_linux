@@ -17,36 +17,36 @@ struct pwm_dev {
 	int id;
 	u32 current_val;
 
-    struct regulator * reg;
+	struct regulator * reg;
 };
 
 static struct pwm_dev pwm_dev;
 
-// only one class
+/* only one class */
 struct class *nvs_class;
 
 static ssize_t pwm_read(struct file *filp, char __user *buff, size_t count,
-			loff_t *offp)
+		loff_t *offp)
 {
 	size_t len;
 	ssize_t status;
 	struct pwm_dev *pd = filp->private_data;
 	char temp[16];
-    int enabled;
+	int enabled;
 
 	if (!buff)
 		return -EFAULT;
 
-	// for user progs like cat that will keep asking forever
+	/* for user progs like cat that will keep asking forever */
 	if (*offp > 0)
 		return 0;
 
 	if (down_interruptible(&pd->sem))
 		return -ERESTARTSYS;
 
-    enabled = regulator_is_enabled(pd->reg);
-    if (enabled)
-        enabled = 1;
+	enabled = regulator_is_enabled(pd->reg);
+	if (enabled)
+		enabled = 1;
 	len = sprintf(temp, "%u\n", enabled);
 
 	if (len + 1 < count)
@@ -66,12 +66,13 @@ static ssize_t pwm_read(struct file *filp, char __user *buff, size_t count,
 }
 
 static ssize_t pwm_write(struct file *filp, const char __user *buff,
-			size_t count, loff_t *offp)
+		size_t count, loff_t *offp)
 {
 	size_t len;
 	u32 val;
 	ssize_t status = 0;
 	char temp[16];
+	int enabled;
 
 	struct pwm_dev *pd = filp->private_data;
 
@@ -97,10 +98,12 @@ static ssize_t pwm_write(struct file *filp, const char __user *buff,
 
 	val = simple_strtoul(temp, NULL, 0);
 
-	if (val)
-        status = regulator_enable(pd->reg);
-	else
-        status = regulator_disable(pd->reg);
+	enabled = regulator_is_enabled(pd->reg);
+
+	if (val && !enabled)
+		status = regulator_enable(pd->reg);
+	else if (!val && enabled)
+		status = regulator_disable(pd->reg);
 
 	*offp += count;
 
@@ -169,7 +172,7 @@ static int __init pwm_init_class(struct pwm_dev *pd)
 	}
 
 	pd->device = device_create(nvs_class, NULL, pd->devt, NULL, "nvs%d",
-				MINOR(pd->devt));
+			MINOR(pd->devt));
 
 	if (IS_ERR(pd->device)) {
 		ret = PTR_ERR(pd->device);
@@ -182,48 +185,48 @@ static int __init pwm_init_class(struct pwm_dev *pd)
 
 static int __init pwm_get_regulator(struct pwm_dev *pd)
 {
-    int ret = 0;
+	int ret = 0;
 
-    pd->reg  = regulator_get(pd->device, "vrpu");
+	pd->reg  = regulator_get(pd->device, "vrpu");
 
-    if (IS_ERR(pd->reg)) {
-        printk(KERN_ERR "%s: cant get vrpu\n", __func__);
-        ret = PTR_ERR(pd->reg);
-        goto pgr_out;
-    }
+	if (IS_ERR(pd->reg)) {
+		printk(KERN_ERR "%s: cant get vrpu\n", __func__);
+		ret = PTR_ERR(pd->reg);
+		goto pgr_out;
+	}
 
 pgr_out:
-    return ret;
+	return ret;
 }
 
 static void pwm_dev_cleanup(void)
 {
-    regulator_put(pwm_dev.reg);
+	regulator_put(pwm_dev.reg);
 
-    if (pwm_dev.device)
-        device_destroy(nvs_class, pwm_dev.devt);
+	if (pwm_dev.device)
+		device_destroy(nvs_class, pwm_dev.devt);
 
 	if (nvs_class)
 		class_destroy(nvs_class);
 
-    cdev_del(&pwm_dev.cdev);
-    unregister_chrdev_region(pwm_dev.devt, 1);
+	cdev_del(&pwm_dev.cdev);
+	unregister_chrdev_region(pwm_dev.devt, 1);
 }
 
 static int __init nvs_init(void)
 {
-    printk(KERN_INFO "Starting nvs power\n");
+	printk(KERN_INFO "Starting nvs power\n");
 
-    sema_init(&pwm_dev.sem, 1);
+	sema_init(&pwm_dev.sem, 1);
 
-    if (pwm_init_cdev(&pwm_dev))
-        goto init_fail;
+	if (pwm_init_cdev(&pwm_dev))
+		goto init_fail;
 
-    if (pwm_init_class(&pwm_dev))
-        goto init_fail;
+	if (pwm_init_class(&pwm_dev))
+		goto init_fail;
 
-    if (pwm_get_regulator(&pwm_dev))
-        goto init_fail;
+	if (pwm_get_regulator(&pwm_dev))
+		goto init_fail;
 
 	return 0;
 
