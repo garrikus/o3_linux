@@ -113,6 +113,14 @@ static struct snd_soc_dai_link orion2_dai[] = {
 		.platform_name = "omap-pcm-audio",
 		.codec_name = "twl4030-codec",
 		.ops 		= &orion2_codec_ops,
+	}, {
+		.name 		= "Modem",
+		.stream_name 	= "GSM Modem",
+		.cpu_dai_name = "omap-mcbsp-dai.2",
+		.codec_dai_name = "ws6318-hifi",
+		.platform_name = "omap-pcm-audio",
+		.codec_name = "ws6318-codec",
+		.ops 		= &orion2_modem_ops,
 	}
 };
 

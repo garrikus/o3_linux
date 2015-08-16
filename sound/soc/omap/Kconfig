@@ -85,6 +85,7 @@ config SND_OMAP_SOC_ORION2
 	depends on TWL4030_CORE && SND_OMAP_SOC && MACH_ORION2
 	select SND_OMAP_SOC_MCBSP
 	select SND_SOC_TWL4030
+	select SND_SOC_WS6318
 	help
 	  Say Y if you want to add support for SoC audio on the orion2 board.
 

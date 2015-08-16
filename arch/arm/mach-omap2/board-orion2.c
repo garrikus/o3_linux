@@ -569,6 +569,16 @@ static void orion_restart(char str, const char *cmd)
 		original_restart(str, cmd);
 }
 
+struct platform_device orion_ws6318_audio = {
+	.name		= "ws6318-codec",
+	.id		= -1,
+};
+
+static void __init orion_init_ws6318_audio(void)
+{
+	platform_device_register(&orion_ws6318_audio);
+}
+
 static void __init omap3_evm_init(void)
 {
 	pm_power_off = orion_power_off;
@@ -598,6 +608,8 @@ static void __init omap3_evm_init(void)
 				ARRAY_SIZE(omap3evm_spi_board_info));
 
 	omap_serial_init();
+
+	orion_init_ws6318_audio();
 
 #if 0
 	/* OMAP3EVM uses ISP1504 phy and so register nop transceiver */
