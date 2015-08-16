@@ -316,6 +316,15 @@ static struct twl4030_clock_init_data omap3orion_clock_data = {
 	/* .slicer_bypass  	= false,*/
 };
 
+static struct twl4030_codec_audio_data omap3evm_audio_data = {
+	.audio_mclk = 26000000,
+};
+
+static struct twl4030_codec_data omap3evm_codec_data = {
+	.audio_mclk = 26000000,
+	.audio = &omap3evm_audio_data,
+};
+
 static struct twl4030_platform_data omap3evm_twldata = {
 	.irq_base	= TWL4030_IRQ_BASE,
 	.irq_end	= TWL4030_IRQ_END,
@@ -325,7 +334,7 @@ static struct twl4030_platform_data omap3evm_twldata = {
 	/*.madc		= &omap3evm_madc_data,*/
 	.usb		= &omap3evm_usb_data,
 	.gpio		= &omap3evm_gpio_data,
-	/*.codec		= &omap3evm_codec_data,*/
+	.codec		= &omap3evm_codec_data,
 	/*.vdac		= &omap3_evm_vdac,*/
 	/*.vpll2		= &omap3_evm_vpll2,*/
 	/*.vaux2          = &omap3evm_vaux2,*/
