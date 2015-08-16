@@ -318,6 +318,8 @@ static struct twl4030_clock_init_data omap3orion_clock_data = {
 
 static struct twl4030_codec_audio_data omap3evm_audio_data = {
 	.audio_mclk = 26000000,
+	.check_defaults = 1,
+	.reset_registers = 1,
 };
 
 static struct twl4030_codec_data omap3evm_codec_data = {
