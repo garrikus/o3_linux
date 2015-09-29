@@ -370,6 +370,10 @@ static struct i2c_board_info __initdata omap3orion_i2c_boardinfo2[] = {
         .irq = ORION2_KEYPAD_IRQGPIO,
         .platform_data = &tca8418_pdata,
     },
+	{
+		/* Digital pressure sensor BMP180 */
+		I2C_BOARD_INFO("bmp180", 0x77),
+	},
 };
 
 static struct i2c_board_info __initdata omap3orion_i2c_boardinfo3[] = {
