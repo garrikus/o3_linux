@@ -1,7 +1,7 @@
 #
 # Automatically generated make config: don't edit
 # Linux/arm 2.6.37 Kernel Configuration
-# Mon Jan 21 12:05:08 2013
+# Fri Oct  9 11:31:55 2015
 #
 CONFIG_ARM=y
 CONFIG_SYS_SUPPORTS_APM_EMULATION=y
@@ -721,7 +721,7 @@ CONFIG_MISC_DEVICES=y
 # CONFIG_HMC6352 is not set
 # CONFIG_DS1682 is not set
 # CONFIG_TI_DAC7512 is not set
-# CONFIG_BMP085 is not set
+CONFIG_BMP085=y
 # CONFIG_C2PORT is not set
 
 #

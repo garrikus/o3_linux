@@ -372,7 +372,7 @@ static struct i2c_board_info __initdata omap3orion_i2c_boardinfo2[] = {
     },
 	{
 		/* Digital pressure sensor BMP180 */
-		I2C_BOARD_INFO("bmp180", 0x77),
+		I2C_BOARD_INFO("bmp085", 0x77),
 	},
 };
 
