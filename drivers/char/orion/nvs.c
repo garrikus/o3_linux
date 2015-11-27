@@ -187,7 +187,7 @@ static int __init pwm_get_regulator(struct pwm_dev *pd)
 {
 	int ret = 0;
 
-	pd->reg  = regulator_get(pd->device, "vrpu");
+	pd->reg  = regulator_get_exclusive(pd->device, "vrpu");
 
 	if (IS_ERR(pd->reg)) {
 		printk(KERN_ERR "%s: cant get vrpu\n", __func__);
