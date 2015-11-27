@@ -546,7 +546,7 @@ static void orion_mmc_power_off()
 {
 	/* Remove MMC1 from device groups */
 	if(twl_i2c_write_u8(TWL4030_MODULE_PM_RECEIVER, 0x00, 0x27))
-		printk(KERN_ALERT, "VMMC1_DEV_GRP reset failed.\n");
+		printk(KERN_ALERT "VMMC1_DEV_GRP reset failed.\n");
 }
 
 static void orion_power_off(void)
