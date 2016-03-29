@@ -20,6 +20,7 @@
 #include <linux/clk.h>
 #include <linux/gpio.h>
 #include <linux/input.h>
+#include <linux/mpu.h>
 #include <linux/input/matrix_keypad.h>
 #include <linux/leds.h>
 #include <linux/interrupt.h>
@@ -55,6 +56,7 @@
 
 #define ORION_TS_GPIO          14
 #define ORION2_KEYPAD_IRQGPIO  15
+#define ORION2_MPU9250_IRQGPIO 16	
 
 #define ORION2_DSI_CMDVID_GPIO 178
 #define ORION2_DSI_PANEL_RESET 180
@@ -345,6 +347,20 @@ static struct twl4030_platform_data omap3evm_twldata = {
 	.vaux3		= &omap3evm_vaux3,
 };
 
+static struct mpu_platform_data gyro_platform_data = {
+        .int_config  = 0x00,
+        .level_shifter = 0,
+        .orientation = {   1,  0,  0,
+                           0,  1,  0,
+                           0,  0, 1 },
+        .sec_slave_type = SECONDARY_SLAVE_TYPE_COMPASS,
+        .sec_slave_id   = COMPASS_ID_AK8963,
+        .secondary_i2c_addr = 0x0C,
+        .secondary_orientation = { 0,  1,  0,
+                                   -1, 0,  0,
+                                   0,  0,  1 },
+};
+
 static struct i2c_board_info __initdata omap3orion_i2c_boardinfo1[] = {
     /* PMIC. TPS65951 onboard, but using TPS65950 so far. */
 	{
@@ -356,20 +372,26 @@ static struct i2c_board_info __initdata omap3orion_i2c_boardinfo1[] = {
 };
 
 static struct i2c_board_info __initdata omap3orion_i2c_boardinfo2[] = {
-	{
-		/* Compass */
+	/*{
+		// Compass
 		I2C_BOARD_INFO("hmc5843", 0x1e),
 	},
 	{
-		/* Accelerometer */
+		// Accelerometer
 		I2C_BOARD_INFO("mma8450q", 0x1d),
+	},*/	
+	{
+		// MPU-9250
+		I2C_BOARD_INFO("mpu9250", 0x68),
+        .irq = ORION2_KEYPAD_IRQGPIO,
+        .platform_data = &gyro_platform_data,
 	},
-    {
-        /* Keypad */
+    /*{
+        // Keypad 
         I2C_BOARD_INFO("tca8418_keypad", 0x34),
         .irq = ORION2_KEYPAD_IRQGPIO,
         .platform_data = &tca8418_pdata,
-    },
+    },*/
 	{
 		/* Digital pressure sensor BMP180 */
 		I2C_BOARD_INFO("bmp085", 0x77),
