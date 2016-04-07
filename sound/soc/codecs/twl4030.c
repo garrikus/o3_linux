@@ -241,10 +241,14 @@ static void twl4030_codec_enable(struct snd_soc_codec *codec, int enable)
 	if (enable == twl4030->codec_powered)
 		return;
 
-	if (enable)
+	if (enable) {
 		mode = twl4030_codec_enable_resource(TWL4030_CODEC_RES_POWER);
-	else
+		printk("Codec PwrUP\n");
+	}
+	else {
 		mode = twl4030_codec_disable_resource(TWL4030_CODEC_RES_POWER);
+		printk("Codec PwrDown\n");
+	}
 
 	if (mode >= 0) {
 		twl4030_write_reg_cache(codec, TWL4030_REG_CODEC_MODE, mode);
