@@ -17,6 +17,8 @@
 
 #define TWL4030_INTBR_PMBR1 0x0D
 
+#define ORION2_SPK_AMP_GPIO 205
+
 static int orion2_hw_params_codec(struct snd_pcm_substream *substream,
 	struct snd_pcm_hw_params *params)
 {
@@ -54,6 +56,19 @@ static int orion2_hw_params_codec(struct snd_pcm_substream *substream,
 	}
 
 	return 0;
+}
+
+static int orion2_codec_amp_start(struct snd_pcm_substream *substream)
+{
+	printk("AMP Start\n");
+	gpio_direction_output(ORION2_SPK_AMP_GPIO, 1);
+	return 0;
+}
+
+static void orion2_codec_amp_shutdown(struct snd_pcm_substream *substream)
+{
+	printk("AMP Shutdown\n");
+	gpio_direction_output(ORION2_SPK_AMP_GPIO, 0);
 }
 
 static int orion2_hw_params_modem(struct snd_pcm_substream *substream,
@@ -97,6 +112,8 @@ static int orion2_hw_params_modem(struct snd_pcm_substream *substream,
 
 static struct snd_soc_ops orion2_codec_ops = {
 	.hw_params = orion2_hw_params_codec,
+	.startup = orion2_codec_amp_start,
+	.shutdown = orion2_codec_amp_shutdown,
 };
 
 static struct snd_soc_ops orion2_modem_ops = {
@@ -139,6 +156,10 @@ static int __init orion2_soc_init(void)
 	u8 pin_mux;
 
 	pr_info("Orion2 SoC Audio init\n");
+
+	printk("GPIO-205 request\n");
+	if (gpio_request(ORION2_SPK_AMP_GPIO, "codec-amp-power"))
+		printk(KERN_ERR "failed to get codec-amp-power (gpio-205)\n");
 
 	orion2_snd_device = platform_device_alloc("soc-audio", -1);
 	if (!orion2_snd_device) {
