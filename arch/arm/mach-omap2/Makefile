@@ -197,6 +197,7 @@ obj-$(CONFIG_MACH_OMAP3EVM)		+= board-omap3evm.o \
 					   hsmmc.o \
 					   board-flash.o
 obj-$(CONFIG_MACH_ORION2)		+= board-orion2.o \
+					   board-orion2-i2c.o \
 					   hsmmc.o \
 					   board-flash.o
 obj-$(CONFIG_MACH_OMAP3_PANDORA)	+= board-omap3pandora.o \
