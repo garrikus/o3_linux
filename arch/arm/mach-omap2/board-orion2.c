@@ -357,22 +357,10 @@ static struct i2c_board_info __initdata omap3orion_i2c_boardinfo1[] = {
 
 static struct i2c_board_info __initdata omap3orion_i2c_boardinfo2[] = {
 	{
-		/* Compass */
-		I2C_BOARD_INFO("hmc5843", 0x1e),
-	},
-	{
-		/* Accelerometer */
-		I2C_BOARD_INFO("mma8450q", 0x1d),
-	},
-    {
-        /* Keypad */
-        I2C_BOARD_INFO("tca8418_keypad", 0x34),
-        .irq = ORION2_KEYPAD_IRQGPIO,
-        .platform_data = &tca8418_pdata,
-    },
-	{
-		/* Digital pressure sensor BMP180 */
-		I2C_BOARD_INFO("bmp085", 0x77),
+		/* Keypad */
+		I2C_BOARD_INFO("tca8418_keypad", 0x34),
+		.irq = ORION2_KEYPAD_IRQGPIO,
+		.platform_data = &tca8418_pdata,
 	},
 };
 
