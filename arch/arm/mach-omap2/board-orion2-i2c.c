@@ -4,10 +4,9 @@
 #include <linux/i2c.h>
 #include <linux/mpu.h>
 
-MODULE_LICENSE("GPL");              ///< The license type -- this affects runtime behavior
-MODULE_DESCRIPTION("A simple Linux driver to bring up some particular i2c-devices");  ///< The description -- see modinfo
+MODULE_LICENSE("GPL");
+MODULE_DESCRIPTION("A simple Linux driver to bring up some particular i2c-devices");
 
-#define ORION2_KEYPAD_IRQGPIO  15
 #define ORION2_MPU9250_IRQGPIO 16
 
 static char *name = "Orion2 i2c-select";
