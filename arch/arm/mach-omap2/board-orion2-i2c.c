@@ -9,7 +9,6 @@ MODULE_DESCRIPTION("A simple Linux driver to bring up some particular i2c-device
 
 #define ORION2_MPU9250_IRQGPIO 16
 
-static char *name = "Orion2 i2c-select";
 static const unsigned short mpu_i2c_addresses[] = {0x68, I2C_CLIENT_END};
 
 
@@ -27,7 +26,7 @@ static struct mpu_platform_data gyro_platform_data = {
                                    0,  0,  1 },
 };
 
-static int probe_mpu9250()
+static int probe_mpu9250(void)
 {
 	struct i2c_adapter *i2c_adap;
 	struct i2c_board_info i2c_info;
@@ -53,7 +52,7 @@ static const unsigned short compass_i2c_addresses[] = {0x1e, I2C_CLIENT_END};
 static const unsigned short accel_i2c_addresses[] = {0x1d, I2C_CLIENT_END};
 static const unsigned short baro_i2c_addresses[] = {0x77, I2C_CLIENT_END};
 
-static int probe_old_devices()
+static int probe_old_devices(void)
 {
 	struct i2c_adapter *i2c_adap;
 	struct i2c_board_info i2c_info;
@@ -79,6 +78,8 @@ static int probe_old_devices()
 	i2c_client_ptr = i2c_new_probed_device(i2c_adap, &i2c_info, baro_i2c_addresses, NULL);
 
 	i2c_put_adapter(i2c_adap);
+
+	return 0;
 }
 
 static int orion2_board_rev = 0;
@@ -97,7 +98,7 @@ static int __devinit orion2_i2c_init(void)
 	return 0;
 }
 
-int orion2_board_rev_get()
+int orion2_board_rev_get(void)
 {
 	return orion2_board_rev;
 }

@@ -534,7 +534,7 @@ static struct omap_musb_board_data musb_board_data = {
 	.power			= 100,
 };
 
-static void orion_mmc_power_off()
+static void orion_mmc_power_off(void)
 {
 	/* Remove MMC1 from device groups */
 	if(twl_i2c_write_u8(TWL4030_MODULE_PM_RECEIVER, 0x00, 0x27))
