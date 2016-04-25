@@ -58,17 +58,41 @@ static int orion2_hw_params_codec(struct snd_pcm_substream *substream,
 	return 0;
 }
 
+/* HACK: use hardcoded values from board init files */
+extern int orion2_board_rev_get(void);
+static int is_codec_amp_control(void)
+{
+	int revision;
+	int ret;
+
+	ret = 0;
+
+	revision = orion2_board_rev_get();
+	switch (revision) {
+		case 20160:
+			ret = 1;
+			break;
+		default:
+			ret = 0;
+			break;
+	}
+
+	return ret;
+}
+
 static int orion2_codec_amp_start(struct snd_pcm_substream *substream)
 {
 	printk("AMP Start\n");
-	gpio_direction_output(ORION2_SPK_AMP_GPIO, 1);
+	if (is_codec_amp_control())
+		gpio_direction_output(ORION2_SPK_AMP_GPIO, 1);
 	return 0;
 }
 
 static void orion2_codec_amp_shutdown(struct snd_pcm_substream *substream)
 {
 	printk("AMP Shutdown\n");
-	gpio_direction_output(ORION2_SPK_AMP_GPIO, 0);
+	if (is_codec_amp_control())
+		gpio_direction_output(ORION2_SPK_AMP_GPIO, 0);
 }
 
 static int orion2_hw_params_modem(struct snd_pcm_substream *substream,
