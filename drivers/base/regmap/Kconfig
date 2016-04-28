@@ -1,0 +1,11 @@
+# Generic register map support.  There are no user servicable options here,
+# this is an API intended to be used by other kernel subsystems.  These
+# subsystems should select the appropriate symbols.
+
+config REGMAP
+	default y
+	bool "Generic register map support"
+
+config REGMAP_I2C
+	tristate "regmap i2c support"
+	depends on I2C

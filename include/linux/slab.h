@@ -230,6 +230,13 @@ static inline void *kcalloc(size_t n, size_t size, gfp_t flags)
 	return __kmalloc(n * size, flags | __GFP_ZERO);
 }
 
+static inline void *kmalloc_array(size_t n, size_t size, gfp_t flags)
+{
+    if (size != 0 && n > SIZE_MAX / size)
+        return NULL;
+    return __kmalloc(n * size, flags);
+}
+
 #if !defined(CONFIG_NUMA) && !defined(CONFIG_SLOB)
 /**
  * kmalloc_node - allocate memory from a specific node

@@ -448,4 +448,6 @@ config INPUT_ADXL34X_SPI
 	  To compile this driver as a module, choose M here: the
 	  module will be called adxl34x-spi.
 
+source "drivers/input/misc/bmp280/Kconfig"
+
 endif
