@@ -10,6 +10,7 @@ MODULE_DESCRIPTION("A simple Linux driver to bring up some particular i2c-device
 #define ORION2_MPU9250_IRQGPIO 16
 
 static const unsigned short mpu_i2c_addresses[] = {0x68, I2C_CLIENT_END};
+static const unsigned short bme_i2c_addresses[] = {0x76, I2C_CLIENT_END};
 
 
 static struct mpu_platform_data gyro_platform_data = {
@@ -26,21 +27,28 @@ static struct mpu_platform_data gyro_platform_data = {
                                    0,  0,  1 },
 };
 
-static int probe_mpu9250(void)
+static int probe_new_devices(void)
 {
 	struct i2c_adapter *i2c_adap;
 	struct i2c_board_info i2c_info;
-	struct i2c_client *i2c_client_ptr = NULL;
+	struct i2c_client *i2c_client_ptr_mpu = NULL;
+	struct i2c_client *i2c_client_ptr_bme = NULL;
 
 	i2c_adap = i2c_get_adapter(2);
 	memset(&i2c_info, 0, sizeof(struct i2c_board_info));
 	strlcpy(i2c_info.type, "mpu9250", I2C_NAME_SIZE);
         i2c_info.irq = ORION2_MPU9250_IRQGPIO;
         i2c_info.platform_data = &gyro_platform_data;
-	i2c_client_ptr = i2c_new_probed_device(i2c_adap, &i2c_info, mpu_i2c_addresses, NULL);
+	i2c_client_ptr_mpu = i2c_new_probed_device(i2c_adap, &i2c_info, mpu_i2c_addresses, NULL);
+
+	memset(&i2c_info, 0, sizeof(struct i2c_board_info));
+	strlcpy(i2c_info.type, "bmp280", I2C_NAME_SIZE);
+	i2c_client_ptr_bme = i2c_new_probed_device(i2c_adap, &i2c_info, bme_i2c_addresses, NULL);
+
 	i2c_put_adapter(i2c_adap);
 
-	if (i2c_client_ptr) {
+	/* So far user space doesnt use bme, so don't make judjements on it's presence */
+	if (i2c_client_ptr_mpu) {
 		printk(KERN_INFO "MPU9250 detected\n");
 		return 0;
 	}
@@ -87,7 +95,7 @@ static int __devinit orion2_i2c_init(void)
 {
 	int ret;
 
-	ret = probe_mpu9250();
+	ret = probe_new_devices();
 
 	if (ret) {
 		probe_old_devices();
