@@ -343,11 +343,11 @@ static int inv_init_config(struct iio_dev *indio_dev)
 	st->chip_config.fsr = INV_FSR_2000DPS;*/
 	
 	result = inv_i2c_single_write(st, reg->gyro_config,
-		INV_FSR_250DPS << GYRO_CONFIG_FSR_SHIFT);
+		INV_FSR_500DPS << GYRO_CONFIG_FSR_SHIFT);
 	if (result)
 		return result;
 	
-	st->chip_config.fsr = INV_FSR_250DPS;	
+	st->chip_config.fsr = INV_FSR_500DPS;	
 	//==================================================================
 
 	result = inv_i2c_single_write(st, reg->lpf, INV_FILTER_42HZ);
@@ -371,26 +371,21 @@ static int inv_init_config(struct iio_dev *indio_dev)
 	st->batch.wake_fifo_on = true;
 	
 	//==================================================================
-	/*if (INV_ITG3500 != st->chip_type) {
-		st->chip_config.accel_fs = INV_FS_02G;
-		result = inv_i2c_single_write(st, reg->accel_config,
-			(INV_FS_02G << ACCEL_CONFIG_FSR_SHIFT));
-		if (result)
-			return result;*/
-	
-	st->chip_config.accel_fs = INV_FS_08G;		
-	result = inv_i2c_single_write(st, reg->accel_config,
-			(INV_FS_08G << ACCEL_CONFIG_FSR_SHIFT));
-		if (result)
-			return result;
-	//==================================================================
 			
 	if (INV_ITG3500 != st->chip_type) {
-		st->chip_config.accel_fs = INV_FS_08G;
+		st->chip_config.accel_fs = INV_FS_04G;
+		result = inv_i2c_single_write(st, reg->accel_config,
+			(INV_FS_04G << ACCEL_CONFIG_FSR_SHIFT));
+		if (result)
+			return result;
+		
+		/*st->chip_config.accel_fs = INV_FS_08G;
 		result = inv_i2c_single_write(st, reg->accel_config,
 			(INV_FS_08G << ACCEL_CONFIG_FSR_SHIFT));
 		if (result)
-			return result;
+			return result;*/
+			
+	//==================================================================
 	
 		st->tap.time = INIT_TAP_TIME;
 		st->tap.thresh = INIT_TAP_THRESHOLD;
@@ -443,7 +438,8 @@ static int inv_init_config(struct iio_dev *indio_dev)
 			return result;
 		/* enable sensor output to FIFO */
 		/*if (has_accel)*/
-			d2 = BITS_GYRO_OUT | BIT_ACCEL_OUT | BIT_TEMPERATURE_OUT | BIT_COMPASS_OUT;
+			//d2 = BITS_GYRO_OUT | BIT_ACCEL_OUT | BIT_TEMPERATURE_OUT | BIT_COMPASS_OUT;
+			d2 = BITS_GYRO_OUT | BIT_ACCEL_OUT | BIT_COMPASS_OUT;
 		/*else
 			d2 = BITS_GYRO_OUT | BIT_TEMPERATURE_OUT;*/
 

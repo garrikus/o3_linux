@@ -609,7 +609,7 @@ static int reset_fifo_itg(struct iio_dev *indio_dev)
 			val |= BIT_ACCEL_OUT;
 			
 		// smike
-		val |= BIT_TEMPERATURE_OUT;
+		//val |= BIT_TEMPERATURE_OUT;
 		val |= BIT_COMPASS_OUT;	
 			
 		result = inv_i2c_single_write(st, reg->fifo_en, val);
@@ -990,7 +990,7 @@ static void inv_get_data_count(struct inv_mpu_state *st)
 		if (st->sensor[SENSOR_GYRO].on)
 			b += BYTES_PER_SENSOR;
 		// smike
-		b += 2; // temperature
+		//b += 2; // temperature
 	}
 	c->bytes_per_datum = b;
 
@@ -1251,6 +1251,9 @@ static int inv_report_gyro_accel(struct iio_dev *indio_dev, u8 *data, s64 t)
 	short s[THREE_AXIS];
 	int ind;
 	int i;
+	
+	struct inv_mpu_slave *slave = st->slave_compass;
+	short sen[3];
 
 	ind = 0;
 	 
@@ -1261,10 +1264,48 @@ static int inv_report_gyro_accel(struct iio_dev *indio_dev, u8 *data, s64 t)
 		ind += BYTES_PER_SENSOR;
 	}
 	
-	if (st->sensor[SENSOR_GYRO].on)
-		udelay(10);
-	
+	slave->read_data(st, sen);
+			
 	if (st->sensor[SENSOR_GYRO].on) {
+		for (i = 0; i < 3; i++)
+			s[i] = be16_to_cpup((__be16 *)(&data[ind + i * 2]));
+		inv_push_8bytes_buffer(st, GYRO_HDR, t, s);
+		ind += BYTES_PER_SENSOR;
+	}
+	
+	/*udelay(10);
+	
+	s[0] = be16_to_cpup((__be16 *)(&data[ind]));
+	s[1] = 0x0000;
+	s[2] = 0x0000;
+	
+	inv_push_8bytes_buffer(st, TEMPERATURE_HDR, t, s);*/
+	
+	return 0;	
+	
+}
+
+static int inv_report_gyro_accel2(struct iio_dev *indio_dev, u8 *data, s64 t)
+{
+	struct inv_mpu_state *st = iio_priv(indio_dev);
+	short s[THREE_AXIS];
+	int ind;
+	int i;
+	
+	struct inv_mpu_slave *slave = st->slave_compass;
+	short sen[3];
+
+	ind = 0;
+	 
+	if (st->sensor[SENSOR_ACCEL].on) {
+		for (i = 0; i < 3; i++)
+			s[i] = be16_to_cpup((__be16 *)(&data[ind + i * 2]));
+		inv_push_8bytes_buffer(st, ACCEL_HDR, t, s);
+		ind += (BYTES_PER_SENSOR+2);
+	}	
+			
+	if (st->sensor[SENSOR_GYRO].on) {
+		slave->read_data(st, sen);
 		for (i = 0; i < 3; i++)
 			s[i] = be16_to_cpup((__be16 *)(&data[ind + i * 2]));
 		inv_push_8bytes_buffer(st, GYRO_HDR, t, s);
@@ -1748,7 +1789,7 @@ irqreturn_t inv_read_fifo(int irq, void *dev_id)
 		if (result)
 			goto end_session;
 		fifo_count = be16_to_cpup((__be16 *)(data));
-		/* fifo count can't be odd number */
+		// fifo count can't be odd number 
 		if (fifo_count & 1)
 			goto flush_fifo;
 		if (fifo_count == 0)
@@ -1773,10 +1814,16 @@ irqreturn_t inv_read_fifo(int irq, void *dev_id)
 				result = inv_i2c_read(st, reg->fifo_r_w, bpm, data);
 				if (result)
 					goto flush_fifo;
-				result = inv_get_timestamp(st,
-							fifo_count / bpm);
+				result = inv_get_timestamp(st, fifo_count / bpm);
 				if (result)
 					goto flush_fifo;
+				
+				// smike
+				if (!write)	{
+					result = inv_i2c_read(st, reg->raw_accel, bpm+2, data);
+					if (result)
+						goto flush_fifo;
+				}
 				
 				// smike
 				/*{
@@ -1789,8 +1836,10 @@ irqreturn_t inv_read_fifo(int irq, void *dev_id)
 				hex_tmp[i*2] = '\0';
 				pr_err("%i:%s\n", fifo_count, hex_tmp);				
 				}*/
-				if (!write)	{							
-					inv_report_gyro_accel(indio_dev, data, st->last_ts);
+				if (!write)	{	
+					// smike									
+					// inv_report_gyro_accel(indio_dev, data, st->last_ts);
+					inv_report_gyro_accel2(indio_dev, data, st->last_ts);
 					write=1;
 				}	
 				fifo_count -= bpm;
