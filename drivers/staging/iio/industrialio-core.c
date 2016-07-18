@@ -168,7 +168,7 @@ static void __exit iio_exit(void)
 	debugfs_remove(iio_debugfs_dentry);
 }
 
-#if defined(CONFIG_DEBUG_FS)
+#if (0 && defined(CONFIG_DEBUG_FS))
 static ssize_t iio_debugfs_read_reg(struct file *file, char __user *userbuf,
 			      size_t count, loff_t *ppos)
 {
