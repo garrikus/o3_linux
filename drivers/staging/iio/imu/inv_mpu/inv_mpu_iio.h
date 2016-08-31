@@ -220,7 +220,7 @@
 #define STEP_INDICATOR_MASK      0xf
 
 #define MAX_BYTES_PER_SAMPLE     80
-#define MAX_HW_FIFO_BYTES        (BYTES_PER_SENSOR * 2)
+#define MAX_HW_FIFO_BYTES        (BYTES_PER_SENSOR * 3)
 #define IIO_BUFFER_BYTES         8
 #define HEADERED_NORMAL_BYTES    8
 #define HEADERED_Q_BYTES         16
