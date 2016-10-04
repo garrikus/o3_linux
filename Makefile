@@ -4,7 +4,7 @@ SUBLEVEL = 37
 EXTRAVERSION =
 NAME = Flesh-Eating Bats with Fangs
 
-BTD_ID = "-05"
+BTD_ID = "-06"
 
 # *DOCUMENTATION*
 # To see a list of typical targets execute "make help"
