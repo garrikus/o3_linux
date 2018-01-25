@@ -55,6 +55,8 @@
 #define BMP_OVERSAMPLING_T_MAX  BMP_VAL_NAME(OVERSAMPLING_16X)
 /*! define maximum pressure oversampling */
 #define BMP_OVERSAMPLING_P_MAX  BMP_VAL_NAME(OVERSAMPLING_16X)
+/*! define maximum humidity oversampling */
+#define BMP_OVERSAMPLING_H_MAX  BMP_VAL_NAME(OVERSAMPLING_16X)
 /*! define defalut filter coefficient */
 #define BMP_FILTER_DEFAULT      BMP_VAL_NAME(FILTERCOEFF_8)
 /*! define maximum filter coefficient */
@@ -90,6 +92,8 @@ struct bmp_client_data {
 	u8 oversampling_t;
 	/*!pressure oversampling variable */
 	u8 oversampling_p;
+	/*!humidity oversampling variable */
+	u8 oversampling_h;
 	/*!indicate operation mode */
 	u8 op_mode;
 	/*!indicate filter coefficient */
@@ -254,6 +258,41 @@ static int bmp_get_pressure(struct bmp_client_data *data, u32 *pressure)
 }
 
 /*!
+ * @brief get compersated humidity value
+ *
+ * @param data the pointer of bmp client data
+ * @param humidity the pointer of humidity value
+ *
+ * @return zero success, non-zero failed
+ * @retval zero success
+ * @retval non-zero failed
+*/
+static int bmp_get_humidity(struct bmp_client_data *data, u32 *humidity)
+{
+	s32 temperature;
+	u32 uhumidity;
+	u32 comp_humi;
+	int err = 0;
+
+	/*
+	 *get current temperature to compersate humidity value
+	 *via variable t_fine, which is defined in sensor function API
+	 */
+	err = bmp_get_temperature(data, &temperature);
+	if (err)
+		return err;
+
+	err = BMP_CALL_API(read_uh)(&uhumidity);
+	if (err)
+		return err;
+
+
+	comp_humi = (BMP_CALL_API(compensate_H_int32)(uhumidity));
+	*humidity = comp_humi / 1024;
+	return err;
+}
+
+/*!
  * @brief get temperature oversampling
  *
  * @param data the pointer of bmp client data
@@ -348,6 +387,55 @@ static int bmp_set_oversampling_p(struct bmp_client_data *data, u8 oversampling)
 		return err;
 
 	data->oversampling_p = oversampling;
+	return err;
+}
+
+/*!
+ * @brief get humidity oversampling
+ *
+ * @param data the pointer of bmp client data
+ *
+ * @return humidity oversampling value
+ * @retval 0 oversampling skipped
+ * @retval 1 oversampling1X
+ * @retval 2 oversampling2X
+ * @retval 3 oversampling4X
+ * @retval 4 oversampling8X
+ * @retval 5 oversampling16X
+*/
+static u32 bmp_get_oversampling_h(struct bmp_client_data *data)
+{
+	int err = 0;
+
+	err = BMP_CALL_API(get_osrs_h)(&data->oversampling_h);
+	if (err)
+		return err;
+
+	return data->oversampling_h;
+}
+
+/*!
+ * @brief set humidity oversampling
+ *
+ * @param data the pointer of bmp client data
+ * @param oversampling humidity oversampling value needed to set
+ *
+ * @return zero success, non-zero failed
+ * @retval zero success
+ * @retval non-zero failed
+*/
+static int bmp_set_oversampling_h(struct bmp_client_data *data, u8 oversampling)
+{
+	int err = 0;
+
+	if (oversampling > BMP_OVERSAMPLING_H_MAX)
+		oversampling = BMP_OVERSAMPLING_H_MAX;
+
+	err = BMP_CALL_API(set_osrs_h)(oversampling);
+	if (err)
+		return err;
+
+	data->oversampling_h = oversampling;
 	return err;
 }
 
@@ -562,6 +650,7 @@ static int bmp_set_workmode(struct bmp_client_data *data, u8 workmode)
 
 	bmp_get_oversampling_t(data);
 	bmp_get_oversampling_p(data);
+	bmp_get_oversampling_h(data);
 
 	return err;
 }
@@ -829,6 +918,34 @@ static ssize_t show_pressure(struct device *dev,
 }
 
 /*!
+ * @brief set compersated humidity value via sysfs node
+ *
+ * @param dev the pointer of device
+ * @param attr the pointer of device attribute file
+ * @param buf the pointer of humidity buffer
+ * @param count buffer size
+ *
+ * @return zero success, non-zero failed
+ * @retval zero success
+ * @retval non-zero failed
+*/
+static ssize_t show_humidity(struct device *dev,
+			struct device_attribute *attr, char *buf)
+{
+	u32 humidity;
+	int status;
+	struct bmp_client_data *data = dev_get_drvdata(dev);
+
+	mutex_lock(&data->lock);
+	status = bmp_get_humidity(data, &humidity);
+	mutex_unlock(&data->lock);
+	if (status == 0)
+		return sprintf(buf, "%d\n", humidity);
+
+	return status;
+}
+
+/*!
  * @brief get temperature oversampling value via sysfs node
  *
  * @param dev the pointer of device
@@ -916,6 +1033,53 @@ static ssize_t store_oversampling_p(struct device *dev,
 	if (status == 0) {
 		mutex_lock(&data->lock);
 		bmp_set_oversampling_p(data, oversampling);
+		mutex_unlock(&data->lock);
+		return count;
+	}
+	return status;
+}
+
+/*!
+ * @brief get humidity oversampling value via sysfs node
+ *
+ * @param dev the pointer of device
+ * @param attr the pointer of device attribute file
+ * @param buf the pointer of humidity oversampling buffer
+ *
+ * @return zero success, non-zero failed
+ * @retval zero success
+ * @retval non-zero failed
+*/
+static ssize_t show_oversampling_h(struct device *dev,
+			struct device_attribute *attr, char *buf)
+{
+	struct bmp_client_data *data = dev_get_drvdata(dev);
+	return sprintf(buf, "%d\n", bmp_get_oversampling_h(data));
+}
+
+/*!
+ * @brief set humidity oversampling value via sysfs node
+ *
+ * @param dev the pointer of device
+ * @param attr the pointer of device attribute file
+ * @param buf the pointer of humidity oversampling buffer
+ * @param count buffer size
+ *
+ * @return zero success, non-zero failed
+ * @retval zero success
+ * @retval non-zero failed
+*/
+static ssize_t store_oversampling_h(struct device *dev,
+			struct device_attribute *attr,
+			const char *buf, size_t count)
+{
+	struct bmp_client_data *data = dev_get_drvdata(dev);
+	unsigned long oversampling;
+	//int status = kstrtoul(buf, 10, &oversampling);
+	int status = kstrtoul(buf, 10, &oversampling);
+	if (status == 0) {
+		mutex_lock(&data->lock);
+		bmp_set_oversampling_h(data, oversampling);
 		mutex_unlock(&data->lock);
 		return count;
 	}
@@ -1281,10 +1445,14 @@ static DEVICE_ATTR(temperature, S_IRUGO,
 			show_temperature, NULL);
 static DEVICE_ATTR(pressure, S_IRUGO,
 			show_pressure, NULL);
+static DEVICE_ATTR(humidity, S_IRUGO,
+			show_humidity, NULL);
 static DEVICE_ATTR(oversampling_t, S_IWUSR | S_IRUGO,
 			show_oversampling_t, store_oversampling_t);
 static DEVICE_ATTR(oversampling_p, S_IWUSR | S_IRUGO,
 			show_oversampling_p, store_oversampling_p);
+static DEVICE_ATTR(oversampling_h, S_IWUSR | S_IRUGO,
+			show_oversampling_h, store_oversampling_h);
 static DEVICE_ATTR(op_mode, S_IWUSR | S_IRUGO,
 			show_op_mode, store_op_mode);
 static DEVICE_ATTR(filter, S_IWUSR | S_IRUGO,
@@ -1312,10 +1480,14 @@ static struct attribute *bmp_attributes[] = {
 	&dev_attr_temperature.attr,
 	/**< compersated pressure attribute */
 	&dev_attr_pressure.attr,
+	/**< compersated humidity attribute */
+	&dev_attr_humidity.attr,
 	/**< temperature oversampling attribute */
 	&dev_attr_oversampling_t.attr,
 	/**< pressure oversampling attribute */
 	&dev_attr_oversampling_p.attr,
+	/**< humidity oversampling attribute */
+	&dev_attr_oversampling_h.attr,
 	/**< operature mode attribute */
 	&dev_attr_op_mode.attr,
 	/**< filter coefficient attribute */

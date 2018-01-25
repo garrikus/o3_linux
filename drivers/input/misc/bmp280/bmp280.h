@@ -18,6 +18,8 @@
 #if defined(__KERNEL__)
 #include <linux/kernel.h>
 #include <linux/math64.h>
+#define BMP280_U8_t  u8
+#define BMP280_S8_t  s8
 #define BMP280_U16_t u16
 #define BMP280_S16_t s16
 #define BMP280_U32_t u32
@@ -250,6 +252,16 @@ BMP280_BUS_RD_PARAM_TYPE to function calls used inside the API
 #define BMP280_DIG_P9_LSB_REG                0x9E
 #define BMP280_DIG_P9_MSB_REG                0x9F
 
+#define BMP280_DIG_H1_LSB_REG                0xA1
+#define BMP280_DIG_H2_LSB_REG                0xE1
+#define BMP280_DIG_H2_MSB_REG                0xE2
+#define BMP280_DIG_H3_LSB_REG                0xE3
+#define BMP280_DIG_H4_LSB_REG                0xE4
+#define BMP280_DIG_H4_MSB_REG                0xE5
+#define BMP280_DIG_H5_LSB_REG                0xE5
+#define BMP280_DIG_H5_MSB_REG                0xE6
+#define BMP280_DIG_H6_LSB_REG                0xE7
+
 #define BMP280_CHIPID_REG                    0xD0  /*Chip ID Register */
 #define BMP280_RESET_REG                     0xE0  /*Softreset Register */
 #define BMP280_STATUS_REG                    0xF3  /*Status Register */
@@ -261,6 +273,10 @@ BMP280_BUS_RD_PARAM_TYPE to function calls used inside the API
 #define BMP280_TEMPERATURE_MSB_REG           0xFA  /*Temperature MSB Reg */
 #define BMP280_TEMPERATURE_LSB_REG           0xFB  /*Temperature LSB Reg */
 #define BMP280_TEMPERATURE_XLSB_REG          0xFC  /*Temperature XLSB Reg */
+
+#define BMP280_HUMIDITY_MSB_REG              0xFD  /*Humidity MSB Reg */
+#define BMP280_HUMIDITY_LSB_REG              0xFE  /*Humidity LSB Reg */
+#define BMP280_HUMIDITY_CTRL_REG             0xF2  /*Humidity Control Reg */
 
 /* Status Register */
 #define BMP280_STATUS_REG_MEASURING__POS           3
@@ -283,6 +299,12 @@ BMP280_BUS_RD_PARAM_TYPE to function calls used inside the API
 #define BMP280_CTRLMEAS_REG_OSRSP__MSK             0x1C
 #define BMP280_CTRLMEAS_REG_OSRSP__LEN             3
 #define BMP280_CTRLMEAS_REG_OSRSP__REG             BMP280_CTRLMEAS_REG
+
+/* humidity oversampling */
+#define BMP280_CTRLMEAS_REG_OSRSH__POS             0
+#define BMP280_CTRLMEAS_REG_OSRSH__MSK             0x07
+#define BMP280_CTRLMEAS_REG_OSRSH__LEN             3
+#define BMP280_CTRLMEAS_REG_OSRSH__REG             BMP280_HUMIDITY_CTRL_REG
 
 #define BMP280_CTRLMEAS_REG_MODE__POS              0
 #define BMP280_CTRLMEAS_REG_MODE__MSK              0x03
@@ -341,6 +363,13 @@ struct bmp280_calibration_param_t {
 	BMP280_S16_t dig_P8;
 	BMP280_S16_t dig_P9;
 
+	BMP280_U8_t  dig_H1;
+	BMP280_S16_t dig_H2;
+	BMP280_U8_t  dig_H3;
+	BMP280_S16_t dig_H4;
+	BMP280_S16_t dig_H5;
+	BMP280_S8_t  dig_H6;
+
 	BMP280_S32_t t_fine;
 };
 /** BMP280 image registers data structure */
@@ -352,6 +381,7 @@ struct bmp280_t {
 
 	unsigned char osrs_t;
 	unsigned char osrs_p;
+	unsigned char osrs_h;
 
 	BMP280_WR_FUNC_PTR;
 	BMP280_RD_FUNC_PTR;
@@ -364,6 +394,8 @@ BMP280_RETURN_FUNCTION_TYPE bmp280_read_ut(BMP280_S32_t *utemperature);
 BMP280_S32_t bmp280_compensate_T_int32(BMP280_S32_t adc_T);
 BMP280_RETURN_FUNCTION_TYPE bmp280_read_up(BMP280_S32_t *upressure);
 BMP280_U32_t bmp280_compensate_P_int32(BMP280_S32_t adc_P);
+BMP280_RETURN_FUNCTION_TYPE bmp280_read_uh(BMP280_U32_t *upressure);
+BMP280_U32_t bmp280_compensate_H_int32(BMP280_S32_t adc_P);
 BMP280_RETURN_FUNCTION_TYPE bmp280_read_uput(BMP280_S32_t *upressure,\
 		BMP280_S32_t *utemperature);
 BMP280_RETURN_FUNCTION_TYPE bmp280_read_pt(BMP280_U32_t *pressure,\
@@ -373,6 +405,8 @@ BMP280_RETURN_FUNCTION_TYPE bmp280_get_osrs_t(unsigned char *value);
 BMP280_RETURN_FUNCTION_TYPE bmp280_set_osrs_t(unsigned char value);
 BMP280_RETURN_FUNCTION_TYPE bmp280_get_osrs_p(unsigned char *value);
 BMP280_RETURN_FUNCTION_TYPE bmp280_set_osrs_p(unsigned char value);
+BMP280_RETURN_FUNCTION_TYPE bmp280_get_osrs_h(unsigned char *value);
+BMP280_RETURN_FUNCTION_TYPE bmp280_set_osrs_h(unsigned char value);
 BMP280_RETURN_FUNCTION_TYPE bmp280_get_mode(unsigned char *mode);
 BMP280_RETURN_FUNCTION_TYPE bmp280_set_mode(unsigned char mode);
 BMP280_RETURN_FUNCTION_TYPE bmp280_set_softreset(void);
