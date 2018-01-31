@@ -851,7 +851,6 @@ static ssize_t store_delay(struct device *dev,
 {
 	struct bmp_client_data *data = dev_get_drvdata(dev);
 	unsigned long delay;
-	//int status = kstrtoul(buf, 10, &delay);
 	int status = strict_strtoul(buf, 10, &delay);
 	if (status == 0) {
 		mutex_lock(&data->lock);
@@ -981,7 +980,6 @@ static ssize_t store_oversampling_t(struct device *dev,
 {
 	struct bmp_client_data *data = dev_get_drvdata(dev);
 	unsigned long oversampling;
-	//int status = kstrtoul(buf, 10, &oversampling);
 	int status = strict_strtoul(buf, 10, &oversampling);
 	if (status == 0) {
 		mutex_lock(&data->lock);
@@ -1028,7 +1026,6 @@ static ssize_t store_oversampling_p(struct device *dev,
 {
 	struct bmp_client_data *data = dev_get_drvdata(dev);
 	unsigned long oversampling;
-	//int status = kstrtoul(buf, 10, &oversampling);
 	int status = strict_strtoul(buf, 10, &oversampling);
 	if (status == 0) {
 		mutex_lock(&data->lock);
@@ -1075,8 +1072,7 @@ static ssize_t store_oversampling_h(struct device *dev,
 {
 	struct bmp_client_data *data = dev_get_drvdata(dev);
 	unsigned long oversampling;
-	//int status = kstrtoul(buf, 10, &oversampling);
-	int status = kstrtoul(buf, 10, &oversampling);
+	int status = strict_strtoul(buf, 10, &oversampling);
 	if (status == 0) {
 		mutex_lock(&data->lock);
 		bmp_set_oversampling_h(data, oversampling);
@@ -1122,7 +1118,6 @@ static ssize_t store_op_mode(struct device *dev,
 {
 	struct bmp_client_data *data = dev_get_drvdata(dev);
 	unsigned long op_mode;
-	//int status = kstrtoul(buf, 10, &op_mode);
 	int status = strict_strtoul(buf, 10, &op_mode);
 	if (status == 0) {
 		mutex_lock(&data->lock);
