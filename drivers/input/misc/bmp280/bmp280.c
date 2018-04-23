@@ -271,6 +271,94 @@ unsigned int bmp280_compensate_P_int32(BMP280_S32_t adc_P)
 #endif
 */
 /*******************************************************************************
+ * Description: *//**\brief reads uncompensated humidity.
+ *
+ *
+ *
+ *
+ *  \param signed long uhumidity : Pointer holding the uncompensated humidity.
+ *
+ *
+ *
+ *  \return
+ *
+ *
+ ******************************************************************************/
+/* Scheduling:
+ *
+ *
+ *
+ * Usage guide:
+ *
+ *
+ * Remarks:
+ *
+ ******************************************************************************/
+BMP280_RETURN_FUNCTION_TYPE bmp280_read_uh(BMP280_U32_t *uhumidity)
+{
+	BMP280_RETURN_FUNCTION_TYPE comres = 0;
+	unsigned char a_data_u8r[2] = {0};
+	if (p_bmp280 == BMP280_NULL) {
+		comres = E_BMP280_NULL_PTR;
+	} else {
+		comres += p_bmp280->BMP280_BUS_READ_FUNC(p_bmp280->dev_addr, \
+		BMP280_HUMIDITY_MSB_REG, a_data_u8r, 2);
+
+		*uhumidity = (BMP280_U32_t)((((BMP280_U32_t)(a_data_u8r[0])) << SHIFT_LEFT_8_POSITION)
+			       	| (((BMP280_U32_t)(a_data_u8r[1]))));
+	}
+	return comres;
+}
+/* Compiler Switch if applicable
+#ifdef
+
+#endif
+*/
+/*******************************************************************************
+ * Description: *//**\brief Reads actual humidity from uncompensated humidity
+ *                          and returns the value in %RH * 1024. Returnvalue of
+ *                          “47445” represents 47445/1024 = 46.333 %RH
+ *
+ *
+ *
+ *  \param signed long : value of uncompensated humidity
+ *
+ *
+ *
+ *  \return
+ *   unsigned long : actual humidity
+ *
+ ******************************************************************************/
+/* Scheduling:
+ *
+ *
+ *
+ * Usage guide:
+ *
+ *
+ * Remarks:
+ *
+ ******************************************************************************/
+unsigned int bmp280_compensate_H_int32(BMP280_S32_t adc_H)
+{
+	BMP280_S32_t v_x1_u32r;
+	v_x1_u32r = ((BMP280_S32_t)p_bmp280->cal_param.t_fine - ((BMP280_S32_t)76800));
+	v_x1_u32r = (((((adc_H << 14) - (((BMP280_S32_t)p_bmp280->cal_param.dig_H4) << 20) - (((BMP280_S32_t)p_bmp280->cal_param.dig_H5) * v_x1_u32r)) +
+					((BMP280_S32_t)16384)) >> 15) * (((((((v_x1_u32r * ((BMP280_S32_t)p_bmp280->cal_param.dig_H6)) >> 10) * (((v_x1_u32r *
+											((BMP280_S32_t)p_bmp280->cal_param.dig_H3)) >> 11) + ((BMP280_S32_t)32768))) >> 10) + ((BMP280_S32_t)2097152)) *
+					((BMP280_S32_t)p_bmp280->cal_param.dig_H2) + 8192) >> 14));
+	v_x1_u32r = (v_x1_u32r - (((((v_x1_u32r >> 15) * (v_x1_u32r >> 15)) >> 7) * ((BMP280_S32_t)p_bmp280->cal_param.dig_H1)) >> 4));
+	v_x1_u32r = (v_x1_u32r < 0 ? 0 : v_x1_u32r);
+	v_x1_u32r = (v_x1_u32r > 419430400 ? 419430400 : v_x1_u32r);
+
+	return (BMP280_U32_t)(v_x1_u32r>>12);
+}
+/* Compiler Switch if applicable
+#ifdef
+
+#endif
+*/
+/*******************************************************************************
  * Description: *//**\brief reads uncompensated pressure and temperature
  *
  *
@@ -391,6 +479,11 @@ BMP280_RETURN_FUNCTION_TYPE bmp280_get_calib_param()
 {
 	BMP280_RETURN_FUNCTION_TYPE comres = 0;
 	unsigned char a_data_u8r[26] = {0};
+	BMP280_S16_t dig_H4_lsb;
+	BMP280_S16_t dig_H4_msb;
+	BMP280_S16_t dig_H5_lsb;
+	BMP280_S16_t dig_H5_msb;
+
 	if (p_bmp280 == BMP280_NULL) {
 		comres = E_BMP280_NULL_PTR;
 	} else {
@@ -433,6 +526,26 @@ BMP280_RETURN_FUNCTION_TYPE bmp280_get_calib_param()
 		p_bmp280->cal_param.dig_P9 = (BMP280_S16_t)(((\
 			(BMP280_S16_t)((signed char)a_data_u8r[23])) << \
 			SHIFT_LEFT_8_POSITION) | a_data_u8r[22]);
+
+		comres += p_bmp280->BMP280_BUS_READ_FUNC(p_bmp280->dev_addr, \
+			BMP280_DIG_H1_LSB_REG, a_data_u8r, 1);
+
+		p_bmp280->cal_param.dig_H1 = (BMP280_U8_t)a_data_u8r[0];
+
+		comres += p_bmp280->BMP280_BUS_READ_FUNC(p_bmp280->dev_addr, \
+			BMP280_DIG_H2_LSB_REG, a_data_u8r, 7);
+
+		p_bmp280->cal_param.dig_H2 = (BMP280_S16_t)(((\
+			(BMP280_S16_t)((signed char)a_data_u8r[1])) << \
+			SHIFT_LEFT_8_POSITION) | a_data_u8r[0]);
+		p_bmp280->cal_param.dig_H3 = (BMP280_U8_t)a_data_u8r[2];
+		dig_H4_msb = (BMP280_S16_t)(BMP280_S8_t)a_data_u8r[3] * 16;
+		dig_H4_lsb = (BMP280_S16_t)(a_data_u8r[4] & 0x0f);
+		p_bmp280->cal_param.dig_H4 = dig_H4_msb | dig_H4_lsb;
+		dig_H5_msb = (BMP280_S16_t)(BMP280_S8_t)a_data_u8r[5] * 16;
+		dig_H5_lsb = (BMP280_S16_t)(a_data_u8r[4] >> 4);
+		p_bmp280->cal_param.dig_H5 = dig_H5_msb | dig_H5_lsb;
+		p_bmp280->cal_param.dig_H6 = (BMP280_S8_t)a_data_u8r[6];
 	}
 	return comres;
 }
@@ -621,6 +734,100 @@ BMP280_RETURN_FUNCTION_TYPE bmp280_set_osrs_p(\
 			BMP280_CTRLMEAS_REG_OSRSP__REG, &v_data_u8r, 1);
 
 		p_bmp280->osrs_p = value;
+	}
+	return comres;
+}
+/* Compiler Switch if applicable
+#ifdef
+
+#endif
+*/
+/*******************************************************************************
+ * Description: *//**\brief Used to get the humidity oversampling setting
+ *
+ *
+ *
+ *
+ *  \param  *  \param unsigned char value : Pointer holding the osrs_h value.
+ *
+ *
+ *
+ *  \return
+ *
+ *
+ ******************************************************************************/
+/* Scheduling:
+ *
+ *
+ *
+ * Usage guide:
+ *
+ *
+ * Remarks:
+ *
+ ******************************************************************************/
+BMP280_RETURN_FUNCTION_TYPE bmp280_get_osrs_h(\
+	unsigned char *value)
+{
+	BMP280_RETURN_FUNCTION_TYPE comres = 0;
+	unsigned char v_data_u8r = 0;
+	if (p_bmp280 == BMP280_NULL) {
+		comres = E_BMP280_NULL_PTR;
+	} else {
+		comres += p_bmp280->BMP280_BUS_READ_FUNC(p_bmp280->dev_addr, \
+			BMP280_CTRLMEAS_REG_OSRSH__REG, &v_data_u8r, 1);
+		*value = BMP280_GET_BITSLICE(v_data_u8r, \
+			BMP280_CTRLMEAS_REG_OSRSH);
+
+		p_bmp280->osrs_h = *value;
+	}
+	return comres;
+}
+/* Compiler Switch if applicable
+#ifdef
+
+#endif
+*/
+/*******************************************************************************
+ * Description: *//**\brief Used to set the humidity oversampling setting
+ *
+ *
+ *
+ *
+ *  \param unsigned char value : Value of the humidity oversampling setting.
+ *
+ *
+ *
+ *  \return
+ *
+ *
+ ******************************************************************************/
+/* Scheduling:
+ *
+ *
+ *
+ * Usage guide:
+ *
+ *
+ * Remarks:
+ *
+ ******************************************************************************/
+BMP280_RETURN_FUNCTION_TYPE bmp280_set_osrs_h(\
+	unsigned char value)
+{
+	BMP280_RETURN_FUNCTION_TYPE comres = 0;
+	unsigned char v_data_u8r = 0;
+	if (p_bmp280 == BMP280_NULL) {
+		comres = E_BMP280_NULL_PTR;
+	} else {
+		comres = p_bmp280->BMP280_BUS_READ_FUNC(p_bmp280->dev_addr, \
+			BMP280_CTRLMEAS_REG_OSRSH__REG, &v_data_u8r, 1);
+		v_data_u8r = BMP280_SET_BITSLICE(v_data_u8r, \
+			BMP280_CTRLMEAS_REG_OSRSH, value);
+		comres += p_bmp280->BMP280_BUS_WRITE_FUNC(p_bmp280->dev_addr, \
+			BMP280_CTRLMEAS_REG_OSRSP__REG, &v_data_u8r, 1);
+
+		p_bmp280->osrs_h = value;
 	}
 	return comres;
 }
