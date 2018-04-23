@@ -1397,7 +1397,7 @@ static ssize_t inv_temperature_show(struct device *dev,
 
 	INV_I2C_INC_TEMPREAD(1);
 
-	return sprintf(buf, "%ld %lld\n", scale_t, get_time_ns());
+	return sprintf(buf, "%d %ld %lld\n", temp, scale_t, get_time_ns());
 }
 
 static ssize_t inv_flush_batch_show(struct device *dev,
