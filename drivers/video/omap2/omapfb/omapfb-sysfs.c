@@ -53,9 +53,7 @@ static ssize_t store_rotate_type(struct device *dev,
 	int rot_type;
 	int r;
 
-	r = kstrtoint(buf, 0, &rot_type);
-	if (r)
-		return r;
+	rot_type = simple_strtoul(buf, NULL, 0);
 
 	if (rot_type != OMAP_DSS_ROT_DMA && rot_type != OMAP_DSS_ROT_VRFB)
 		return -EINVAL;
@@ -108,9 +106,7 @@ static ssize_t store_mirror(struct device *dev,
 	int r;
 	struct fb_var_screeninfo new_var;
 
-	r = kstrtoint(buf, 0, &mirror);
-	if (r)
-		return r;
+	mirror = simple_strtoul(buf, NULL, 0);
 
 	mirror = !!mirror;
 
@@ -448,11 +444,7 @@ static ssize_t store_size(struct device *dev, struct device_attribute *attr,
 	int r;
 	int i;
 
-	r = kstrtoul(buf, 0, &size);
-	if (r)
-		return r;
-
-	size = PAGE_ALIGN(size);
+	size = PAGE_ALIGN(simple_strtoul(buf, NULL, 0));
 
 	if (!lock_fb_info(fbi))
 		return -ENODEV;
@@ -540,9 +532,7 @@ static ssize_t store_upd_mode(struct device *dev, struct device_attribute *attr,
 	unsigned mode;
 	int r;
 
-	r = kstrtouint(buf, 0, &mode);
-	if (r)
-		return r;
+	mode = simple_strtoul(buf, NULL, 0);
 
 	r = omapfb_set_update_mode(fbi, mode);
 	if (r)
