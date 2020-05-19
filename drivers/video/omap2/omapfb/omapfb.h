@@ -29,7 +29,7 @@
 
 #include <linux/rwsem.h>
 
-#include <video/omapdss.h>
+#include <plat/display.h>
 
 #ifdef DEBUG
 extern unsigned int omapfb_debug;
