@@ -46,6 +46,8 @@ static char *def_vram;
 static int def_vrfb;
 static int def_rotate;
 static int def_mirror;
+static unsigned int omapfb_logo_pattern;
+static unsigned int skip_update;
 static bool auto_update;
 static unsigned int auto_update_freq;
 module_param(auto_update, bool, 0);
@@ -2323,7 +2325,9 @@ static int omapfb_init_display(struct omapfb2_device *fbdev,
 	d = get_display_data(fbdev, dssdev);
 
 	d->fbdev = fbdev;
-
+	DBG("omapfb_init_display(): autoupd=%d, skip=%d\n", auto_update, skip_update);
+	if (skip_update)
+		goto out;
 	if (dssdev->caps & OMAP_DSS_DISPLAY_CAP_MANUAL_UPDATE) {
 		u16 w, h;
 
@@ -2352,7 +2356,7 @@ static int omapfb_init_display(struct omapfb2_device *fbdev,
 	} else {
 		d->update_mode = OMAPFB_AUTO_UPDATE;
 	}
-
+out:
 	return 0;
 }
 
@@ -2532,6 +2536,8 @@ module_param_named(vram, def_vram, charp, 0);
 module_param_named(rotate, def_rotate, int, 0);
 module_param_named(vrfb, def_vrfb, bool, 0);
 module_param_named(mirror, def_mirror, bool, 0);
+module_param_named(o2logo, omapfb_logo_pattern, bool, 0);
+module_param_named(skipupd, skip_update, bool, 0);
 
 /* late_initcall to let panel/ctrl drivers loaded first.
  * I guess better option would be a more dynamic approach,
