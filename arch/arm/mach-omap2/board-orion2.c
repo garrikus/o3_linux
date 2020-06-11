@@ -57,6 +57,8 @@
 #define ORION2_KEYPAD_IRQGPIO  15
 
 #define ORION2_DSI_CMDVID_GPIO 178
+#define ORION2_DSI_GPIO_LEVEL_CMD 1
+#define ORION2_DSI_GPIO_LEVEL_VID 0
 #define ORION2_DSI_PANEL_RESET 180
 #define ORION2_DSIDBI_GPIO     181
 
@@ -78,7 +80,7 @@ static void __init omap3_evm_display_init(void)
 		printk(KERN_ERR "failed to get lcd_dsi_cmdvid\n");
 		goto err_1;
 	}
-	gpio_direction_output(ORION2_DSI_CMDVID_GPIO, 0);
+	gpio_direction_output(ORION2_DSI_CMDVID_GPIO, ORION2_DSI_GPIO_LEVEL_CMD);
 
 	r = gpio_request(ORION2_DSI_PANEL_RESET, "lcd_dsi_panel_reset");
 	if (r) {
