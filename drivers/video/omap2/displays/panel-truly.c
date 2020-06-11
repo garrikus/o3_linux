@@ -918,42 +918,60 @@ static int power_on_panel_init()
 {
 	int r;
 
+	/* B9 is not SETEXTC, but DGMLUTR
 	r = dsi_vc_dcs_write(TCH, extend_cmd_enable, sizeof(extend_cmd_enable));
 	if (r)
 		goto err;
+	 */
 
+	/* No D5
 	r = dsi_vc_dcs_write(TCH, cmd_gip_setting, sizeof(cmd_gip_setting));
 	if (r)
 		goto err;
 	mdelay(10);
+	 */
 
+	/* No D5
 	r = dsi_vc_dcs_write(TCH, cmd_temp_control_setting, sizeof(cmd_temp_control_setting));
 	if (r)
 		goto err;
+	 */
 
+	/* BA is not SETMIPI, but DGMLUTB
 	r = dsi_vc_dcs_write(TCH, mipi_setting, sizeof(mipi_setting));
 	if (r)
 		goto err;
+	 */
 
+	/* B1 is not SETPOWER, but NVGAMCTRL
 	r = dsi_vc_dcs_write(TCH, cmd_setpower, sizeof(cmd_setpower));
 	if (r)
 		goto err;
+	 */
 
+	/* B2 is not SETDISP, but VGHSS
 	r = dsi_vc_dcs_write(TCH, cmd_setdisp, sizeof(cmd_setdisp));
 	if (r)
 		goto err;
+	 */
 
+	/* No B4
 	r = dsi_vc_dcs_write(TCH, cmd_setcyc, sizeof(cmd_setcyc));
 	if (r)
 		goto err;
+	 */
 
+	/* No B6
 	r = dsi_vc_dcs_write(TCH, cmd_setvcom, sizeof(cmd_setvcom));
 	if (r)
 		goto err;
+	 */
 
+	/*E0 in not SETGAMMA, but SECTRL
 	r = dsi_vc_dcs_write(TCH, cmd_setgamma, sizeof(cmd_setgamma));
 	if (r)
 		goto err;
+	 */
 
 	return 0;
 
