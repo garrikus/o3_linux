@@ -950,7 +950,7 @@ static unsigned char cmd_lneset[] = {
 };
 
 static unsigned char cmd_porctrl[] = {
-	0xC1, 0x10, 0x02
+	0xC1, 0x10, 0x06
 };
 
 static unsigned char cmd_invset[] = {
