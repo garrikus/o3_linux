@@ -44,10 +44,12 @@
 #define DCS_READ_NUM_ERRORS	0x05
 #define DCS_READ_POWER_MODE	0x0a
 #define DCS_READ_MADCTL		0x0b
+#define DCS_READ_COLMOD		0x0c
 #define DCS_READ_PIXEL_FORMAT	0x0c
 #define DCS_RDDSDR		0x0f
 #define DCS_SLEEP_IN		0x10
 #define DCS_SLEEP_OUT		0x11
+#define DCS_ALLPON		0x23
 #define DCS_DISPLAY_OFF		0x28
 #define DCS_DISPLAY_ON		0x29
 #define DCS_COLUMN_ADDR		0x2a
@@ -347,6 +349,20 @@ static int taal_get_id(u8 *id1, u8 *id2, u8 *id3)
 	if (r)
 		return r;
 	r = taal_dcs_read_1(DCS_GET_ID3, id3);
+	if (r)
+		return r;
+
+	return 0;
+}
+
+static int taal_get_misc_data(u8 *pmod, u8 *colmod)
+{
+	int r;
+
+	r = taal_dcs_read_1(DCS_READ_POWER_MODE, pmod);
+	if (r)
+		return r;
+	r = taal_dcs_read_1(DCS_READ_COLMOD, colmod);
 	if (r)
 		return r;
 
@@ -1243,6 +1259,7 @@ static int taal_power_on(struct omap_dss_device *dssdev)
 {
 	struct taal_data *td = dev_get_drvdata(&dssdev->dev);
 	u8 id1, id2, id3;
+	u8 dpm_val = 0, colmod_val = 0;
 	int r;
 
 	r = omapdss_dsi_display_enable(dssdev);
@@ -1255,13 +1272,24 @@ static int taal_power_on(struct omap_dss_device *dssdev)
 
 	omapdss_dsi_vc_enable_hs(TCH, false);
 
-    r = power_on_panel_init();
+	r = taal_get_misc_data(&dpm_val, &colmod_val);
+	if (r)
+		goto err;
+	dev_info(&dssdev->dev, "DPM=0x%02x, COLMOD=0x%02x\n", dpm_val, colmod_val);
+
+
+	r = power_on_panel_init();
 	if (r)
 		goto err;
 
 	r = taal_sleep_out(td);
 	if (r)
 		goto err;
+#if 0
+	r = taal_dcs_write_0(DCS_ALLPON);
+	if (r)
+		goto err;
+#endif
 
 
 	r = taal_get_id(&id1, &id2, &id3);
@@ -1271,12 +1299,22 @@ static int taal_power_on(struct omap_dss_device *dssdev)
 	r = taal_dcs_write_0(DCS_DISPLAY_ON);
 	if (r)
 		goto err;
+	r = taal_dcs_write_0(DCS_ALLPON);
+	if (r)
+		goto err;
 
 	r = _taal_enable_te(dssdev, td->te_enabled);
 	if (r)
 		goto err;
 
 	td->enabled = 1;
+
+
+
+	r = taal_get_misc_data(&dpm_val, &colmod_val);
+	if (r)
+		goto err;
+	dev_info(&dssdev->dev, "DPM=0x%02x, COLMOD=0x%02x\n", dpm_val, colmod_val);
 
 	if (!td->intro_printed) {
 		dev_info(&dssdev->dev, "%s panel revision %02x.%02x.%02x\n",
