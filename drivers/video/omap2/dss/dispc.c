@@ -2066,6 +2066,7 @@ void dispc_set_parallel_interface_mode(enum omap_parallel_interface_mode mode)
 
 	switch (mode) {
 	case OMAP_DSS_PARALLELMODE_BYPASS:
+	case OMAP_DSS_PARALLELMODE_DSI_VIDEO:
 		stallmode = 0;
 		gpout1 = 1;
 		break;

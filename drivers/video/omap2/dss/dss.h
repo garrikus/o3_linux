@@ -109,6 +109,7 @@ enum omap_parallel_interface_mode {
 	OMAP_DSS_PARALLELMODE_BYPASS,		/* MIPI DPI */
 	OMAP_DSS_PARALLELMODE_RFBI,		/* MIPI DBI */
 	OMAP_DSS_PARALLELMODE_DSI,
+	OMAP_DSS_PARALLELMODE_DSI_VIDEO,
 };
 
 enum dss_clock {

@@ -42,6 +42,15 @@
 #define DISPC_IRQ_SYNC_LOST		(1 << 14)
 #define DISPC_IRQ_SYNC_LOST_DIGIT	(1 << 15)
 #define DISPC_IRQ_WAKEUP		(1 << 16)
+#define DISPC_IRQ_SYNC_LOST2		(1 << 17)
+#define DISPC_IRQ_VSYNC2		(1 << 18)
+#define DISPC_IRQ_VID3_END_WIN		(1 << 19)
+#define DISPC_IRQ_VID3_FIFO_UNDERFLOW	(1 << 20)
+#define DISPC_IRQ_ACBIAS_COUNT_STAT2	(1 << 21)
+#define DISPC_IRQ_FRAMEDONE2		(1 << 22)
+#define DISPC_IRQ_FRAMEDONEWB		(1 << 23)
+#define DISPC_IRQ_FRAMEDONETV		(1 << 24)
+#define DISPC_IRQ_WBBUFFEROVERFLOW	(1 << 25)
 
 struct omap_dss_device;
 struct omap_overlay_manager;
@@ -119,6 +128,18 @@ enum omap_panel_config {
 enum omap_dss_venc_type {
 	OMAP_DSS_VENC_TYPE_COMPOSITE,
 	OMAP_DSS_VENC_TYPE_SVIDEO,
+};
+
+enum omap_dss_dsi_pixel_format {
+	OMAP_DSS_DSI_FMT_RGB888,
+	OMAP_DSS_DSI_FMT_RGB666,
+	OMAP_DSS_DSI_FMT_RGB666_PACKED,
+	OMAP_DSS_DSI_FMT_RGB565,
+};
+
+enum omap_dss_dsi_mode {
+	OMAP_DSS_DSI_CMD_MODE = 0,
+	OMAP_DSS_DSI_VIDEO_MODE,
 };
 
 enum omap_display_caps {
@@ -199,6 +220,35 @@ int omap_rfbi_setup_te(enum omap_rfbi_te_mode mode,
 			     int hs_pol_inv, int vs_pol_inv, int extif_div);
 
 /* DSI */
+
+struct omap_dss_dsi_videomode_data {
+	/* DSI video mode blanking data */
+	/* Unit: byte clock cycles */
+	u16 hsa;
+	u16 hfp;
+	u16 hbp;
+	/* Unit: line clocks */
+	u16 vsa;
+	u16 vfp;
+	u16 vbp;
+
+	/* DSI blanking modes */
+	int blanking_mode;
+	int hsa_blanking_mode;
+	int hbp_blanking_mode;
+	int hfp_blanking_mode;
+
+	/* Video port sync events */
+	int vp_de_pol;
+	int vp_hsync_pol;
+	int vp_vsync_pol;
+	bool vp_vsync_end;
+	bool vp_hsync_end;
+
+	bool ddr_clk_always_on;
+	int window_sync;
+};
+
 void dsi_bus_lock(void);
 void dsi_bus_unlock(void);
 int dsi_vc_dcs_write(int channel, u8 *data, int len);
@@ -211,6 +261,8 @@ int dsi_vc_dcs_read_2(int channel, u8 dcs_cmd, u8 *data1, u8 *data2);
 int dsi_vc_set_max_rx_packet_size(int channel, u16 len);
 int dsi_vc_send_null(int channel);
 int dsi_vc_send_bta_sync(int channel);
+int dsi_video_mode_enable(struct omap_dss_device *dssdev, int channel);
+void dsi_video_mode_disable(struct omap_dss_device *dssdev, int channel);
 
 /* Board specific data */
 struct omap_dss_board_info {
@@ -351,6 +403,7 @@ struct omap_dss_device {
 
 	enum omap_display_type type;
 
+	enum omap_channel channel;
 	union {
 		struct {
 			u8 data_lines;
@@ -403,6 +456,10 @@ struct omap_dss_device {
 		int acb;	/* ac-bias pin frequency */
 
 		enum omap_panel_config config;
+
+		enum omap_dss_dsi_pixel_format dsi_pix_fmt;
+		enum omap_dss_dsi_mode dsi_mode;
+		struct omap_dss_dsi_videomode_data dsi_vm_data;
 	} panel;
 
 	struct {
