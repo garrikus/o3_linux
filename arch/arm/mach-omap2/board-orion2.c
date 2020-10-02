@@ -119,41 +119,83 @@ static struct omap_dss_device omap3_evm_lcd_device = {
 	.name			= "truly_lcd",
 	.driver_name		= "truly",
 	.type			= OMAP_DISPLAY_TYPE_DSI,
+	.channel                = OMAP_DSS_CHANNEL_LCD,
 	.phy.dsi = {
-			.clk_lane   = 2,
-			.clk_pol    = 0,
-			.data1_lane = 1,
-			.data1_pol  = 0,
-			.data2_lane = 3,
-			.data2_pol  = 0,
+		.clk_lane   = 2,
+		.clk_pol    = 0,
+		.data1_lane = 1,
+		.data1_pol  = 0,
+		.data2_lane = 3,
+		.data2_pol  = 0,
 
-            .div = {
-                    .regn  = 13,
-                    .regm  = 138,
-                    .regm3 = 6,
-                    .regm4 = 6,
+		.div = {
+			.regn  = 12 + 1,
+			.regm  = 108,
+			.regm3 = 5 + 1,
+			.regm4 = 5 + 1,
 
-                    .lp_clk_div = 8,
+			.lp_clk_div = 8,
 
-                    .lck_div = 1,
-                    .pck_div = 4,
-            },
-    },
+			.lck_div = 1,
+			.pck_div = 4,
+		},
+	},
 
-    .panel = {
-            .timings.x_res = 480,
-            .timings.y_res = 800,
-            .timings.pixel_clock = 23000,
+	.panel = {
+		.timings = {
+			.x_res = 480,
+			.y_res = 800,
+			.pixel_clock = 18000,
+			.hsw = 20,
+			.hfp = 40,
+			.hbp = 40,
+			.vsw = 12,
+			.vfp = 24,
+			.vbp = 16,
 
-            .config = OMAP_DSS_LCD_TFT,
-    },
+		},
 
-    .ctrl.pixel_size    = 24,
-/*	.max_backlight_level	= 100,*/
+		.config = OMAP_DSS_LCD_TFT,
+		.dsi_pix_fmt = OMAP_DSS_DSI_FMT_RGB888,
+		.dsi_mode = OMAP_DSS_DSI_VIDEO_MODE,
+		.dsi_vm_data = { /* FIXME, when dealing with video mode */
+			/* DSI video mode blanking data */
+			/* Unit: byte clock cycles */
+			.hsa = 20,
+			.hfp = 40,
+			.hbp = 40,
+			/* Unit: line clocks */
+			.vsa = 12,
+			.vfp = 24,
+			.vbp = 16,
+
+			/* DSI blanking modes */
+			.blanking_mode = 0,
+			.hsa_blanking_mode = 0,
+			.hbp_blanking_mode = 0,
+			.hfp_blanking_mode = 0,
+
+			/* Video port sync events */
+			.vp_de_pol = 1,
+			.vp_hsync_pol = 1,
+			.vp_vsync_pol = 1,
+			.vp_vsync_end = 0,
+			.vp_hsync_end = 0,
+
+			/* Always set to 1 */
+			.ddr_clk_always_on = 1,
+#if 0
+			int window_sync;
+#endif
+		},
+	},
+
+	.ctrl.pixel_size    = 24,
+	/*	.max_backlight_level	= 100,*/
 	.platform_enable	= omap3_evm_enable_lcd,
 	.platform_disable	= omap3_evm_disable_lcd,
-/*	.set_backlight		= omap3evm_set_bl_intensity,*/
-    .data               = &panel_data,
+	/*	.set_backlight		= omap3evm_set_bl_intensity,*/
+	.data               = &panel_data,
 };
 
 static struct omap_dss_device *omap3_evm_dss_devices[] = {
