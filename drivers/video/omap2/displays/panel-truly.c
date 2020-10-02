@@ -193,6 +193,13 @@ static struct panel_config panel_configs[] = {
 		.timings	= {
 			.x_res		= 480,
 			.y_res		= 800,
+			.pixel_clock = 18000,
+			.hsw = 20,
+			.hfp = 40,
+			.hbp = 40,
+			.vsw = 12,
+			.vfp = 24,
+			.vbp = 16,
 		},
 		.sleep		= {
 			.sleep_in	= 5,
