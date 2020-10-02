@@ -2325,6 +2325,11 @@ static int omapfb_init_display(struct omapfb2_device *fbdev,
 	d = get_display_data(fbdev, dssdev);
 
 	d->fbdev = fbdev;
+
+	/* video mode doesn't need auto updates. it IS autoupdate on its own. */
+	if(dssdev->type == OMAP_DISPLAY_TYPE_DSI && dssdev->panel.dsi_mode == OMAP_DSS_DSI_VIDEO_MODE)
+		auto_update = 0;
+
 	DBG("omapfb_init_display(): autoupd=%d, skip=%d\n", auto_update, skip_update);
 	if (skip_update)
 		goto out;
