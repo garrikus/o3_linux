@@ -49,6 +49,8 @@
 #define DCS_RDDSDR		0x0f
 #define DCS_SLEEP_IN		0x10
 #define DCS_SLEEP_OUT		0x11
+#define DCS_NORON               0x13
+#define DCS_ALLPOFF		0x22
 #define DCS_ALLPON		0x23
 #define DCS_DISPLAY_OFF		0x28
 #define DCS_DISPLAY_ON		0x29
@@ -1324,6 +1326,13 @@ static int taal_power_on(struct omap_dss_device *dssdev)
 					"old Taal version, CABC disabled\n");
 		td->intro_printed = true;
 	}
+
+	r = taal_dcs_write_0(DCS_ALLPOFF);
+	if (r)
+		goto err;
+	r = taal_dcs_write_0(DCS_NORON);
+	if (r)
+		goto err;
 
 	omapdss_dsi_vc_enable_hs(TCH, true);
 
