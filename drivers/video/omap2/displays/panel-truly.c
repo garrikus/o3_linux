@@ -1343,6 +1343,12 @@ static int taal_power_on(struct omap_dss_device *dssdev)
 
 	omapdss_dsi_vc_enable_hs(TCH, true);
 
+	r = dsi_video_mode_enable(dssdev, TCH);
+	if (r) {
+		dev_err(&dssdev->dev, "Failed to enable DSI video mode for panel.\n");
+		goto err;
+	}
+
 	return 0;
 err:
 	dev_err(&dssdev->dev, "error while enabling panel, issuing HW reset\n");
