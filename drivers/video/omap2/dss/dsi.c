@@ -2693,10 +2693,33 @@ static void dsi_proto_timings(struct omap_dss_device *dssdev)
 		tl = DIV_ROUND_UP(4, ndl) + (hsync_end ? hsa : 0) + t_he + hfp +
 			DIV_ROUND_UP(width_bytes + 6, ndl) + hbp;
 
-		DSSDBG("HBP: %d, HFP: %d, HSA: %d, TL: %d TXBYTECLKHS\n", hbp,
-			hfp, hsync_end ? hsa : 0, tl);
+		DSSDBG("HBP: %d, HFP: %d, HSA: %d, TL: %d TXBYTECLKHS (t_he = %d)\n", hbp,
+			hfp, hsync_end ? hsa : 0, tl, t_he);
 		DSSDBG("VBP: %d, VFP: %d, VSA: %d, VACT: %d lines\n", vbp, vfp,
 			vsa, timings->y_res);
+
+		/*****************************************/
+		u32 htotal_dispc = timings->hsw + timings->hfp + timings->x_res + timings->hbp;
+		/* Hardcode Tvp_pclk/Ttxbyteclkhs */
+		u32 Rnom = 3;
+		u32 Rdenom = 2;
+		u32 tl_ex3 = (htotal_dispc * Rnom)/Rdenom;
+		DSSDBG("MyEx: htotal_dispc=%u, tl_ex3=%u, tl_ex3_mod=%u\n",
+				htotal_dispc, tl_ex3, (htotal_dispc * Rnom)%Rdenom);
+
+		u32 hpor_sum = tl_ex3 - (DIV_ROUND_UP(4, ndl) + DIV_ROUND_UP(width_bytes + 6, ndl));
+		u32 hfp_dsi = DIV_ROUND_UP((timings->hfp*bpp),(ndl*8)) - 2/ndl;
+		u32 hbp_dsi = hpor_sum - hfp_dsi;
+		DSSDBG("MyEx: hpor_sum=%u, hfp_dsi=%u, hbp_dsi=%u, hsa_dsi=%u\n",
+				hpor_sum, hfp_dsi, hbp_dsi, hsa);
+
+		tl = tl_ex3;
+		hfp = hfp_dsi;
+		hbp = hbp_dsi;
+		hsa = 0;
+		DSSDBG("MyEx: hpor_sum=%u, hfp_dsi=%u, hbp_dsi=%u, hsa_dsi=%u\n",
+				hpor_sum, hfp_dsi, hbp_dsi, hsa);
+
 
 		r = dsi_read_reg(DSI_VM_TIMING1);
 		r = FLD_MOD(r, hbp, 11, 0);	/* HBP */
